@@ -52,12 +52,25 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 ### 1.5 ログ出力（Gemini 連携 / 行動追跡）
 
-`QuickActionAuditLogger` が次のファイルを `Android/data/com.kafka.launcher/files/logs/` に書き出します。
+`QuickActionAuditLogger` と `ActionLogFileWriter` が `Android/data/com.kafka.launcher/files/logs/` に次のファイルを生成します。
 
 - `quickactions_snapshot.txt` : 現在利用可能な QuickAction 一覧。`QuickActionRepository` のリロード時に置換。
 - `quickactions_events.txt` : QuickAction 実行イベント。ID / プロバイダー / 種別 / 入力クエリを 1 行追記。
+- `action_events.jsonl` : `ActionLogRepository.log` の履歴。LLM 解析向けに ISO 時刻つき JSON Lines で追記。
+- `action_recent.json` : 最近のアプリ使用ログを JSON で保存。
+- `action_stats.json` : アプリ使用頻度ランキングを JSON で保存。
+- `logs_manifest.json` : 上記ファイルと `logs_bundle.zip` のメタデータ（サイズ / 更新時刻）を列挙。
+- `logs_bundle.zip` : すべてのログと `logs_manifest.json` をまとめたアーカイブ。PC 側はこれを定期的に Pull するだけで同期完了。
 
-Gemini 連携や不具合調査時はこのディレクトリを共有するだけで行動ログを参照できます。
+#### PC へのログ取得手順
+
+1. `adb devices` で端末が接続済みであることを確認する。
+2. `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認し、`logs_bundle.zip` の更新時刻とサイズを把握する。
+3. `adb shell "toybox cp -f /sdcard/Android/data/com.kafka.launcher/files/logs/logs_bundle.zip /sdcard/Download/launcher_logs_bundle.zip"` で誰でも読める `Download` フォルダへ複製する。
+4. `adb pull /sdcard/Download/launcher_logs_bundle.zip ./launcher_logs_bundle.zip` を実行して PC へ取得する。
+5. `unzip launcher_logs_bundle.zip -d launcher_logs_bundle` で展開し、`logs_manifest.json` に沿って差分管理する。
+
+`logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できます。
 
 ## 2. アーキテクチャ
 

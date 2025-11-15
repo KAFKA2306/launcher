@@ -159,7 +159,7 @@ enum class AppSort { NAME, USAGE }
 
 - **AppRepository**: インストール済みアプリ列挙、カテゴリ判定、検索フィルタ
 - **QuickActionRepository**: 行動定義の監視とフィルタ。`QuickActionIntentFactory`で実行可能性を検証し、Discord Deep Linkを含むすべての行動を端末状態に合わせて絞り込み、ブロードキャスト受信後に即リロード。再計算した一覧は `QuickActionAuditLogger` を通じて `Android/data/com.kafka.launcher/files/logs/quickactions_snapshot.txt` へ書き出す。
-- **ActionLogRepository**: 実行ログ書き込み、利用頻度算出
+- **ActionLogRepository**: 実行ログ書き込み、利用頻度算出。ログ群は `logs_manifest.json` と `logs_bundle.zip` にまとめ、PC 側は `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認しつつ `toybox cp` で `Download` へ複製してから `adb pull` する。
 - **SettingsRepository**: DataStore から `Settings` Flow を提供
 
 ---
