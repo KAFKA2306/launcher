@@ -20,6 +20,28 @@
 
 ---
 
+## 0.1 ビルド・署名・配布フロー
+
+- `./gradlew assembleDebug` : `app/build/outputs/apk/debug/app-debug.apk` を生成し、そのまま `adb install -r` で検証。
+- `./gradlew lint` : API レベル差分や未使用リソースを洗い出し、`docs/` の仕様と乖離が無いか確認。
+- `./gradlew clean build` : Debug/Release を再生成して差分を吸収。
+- `./gradlew assembleRelease` : release 署名 APK (`app/build/outputs/apk/release/app-release.apk`) を生成し、`apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk` で証明書を確認後に `adb install -r` する。
+
+### local.properties 設定 (AdLessTwitter 共有キーストア利用例)
+
+`../AdLessTwitter` で既に作成済みのリリースキーストアを再利用する前提で、`launcher` 直下の `local.properties` に以下を追加する（例: `/home/kafka/projects/AdLessTwitter/keystore/adless-release.jks`）。
+
+```
+launcherReleaseStoreFile=/home/kafka/projects/AdLessTwitter/keystore/adless-release.jks
+launcherReleaseStorePassword=your-store-pass
+launcherReleaseKeyAlias=adlessShared
+launcherReleaseKeyPassword=your-key-pass
+```
+
+AdLessTwitter と同じキーストアを使うことで証明書フィンガープリントを統一でき、インストール時の「パッケージが無効」エラーを防止できる。キーストアを別途保管する場合も同じキー名称を用い、端末へは release APK のみを配布する。
+
+---
+
 # 1. **機能要件（Functional Requirements）**
 
 ## 1.1 ホーム画面
@@ -160,6 +182,7 @@ Google / Discord / Brave に対して “行動単位” の起動を提供す�
 * アプリ一覧表示：**1000ms以内**
 * 検索バー：**50ms以内に候補反映**
 * APKサイズ：**5〜10MB以下**
+  * 2025-11-15時点で release APK は `./gradlew assembleRelease` による R8 + resource shrink + ja/en ロケールフィルタ適用で **約1.4MB**（`app/build/outputs/apk/release/app-release-unsigned.apk`）を維持。Material Icons は専用ベクターアセットへ置換し、余剰リソースは Gradle 側で除外済み。
 * Compose baselineprofile により初回起動高速化
 
 ## 2.2 バッテリー
