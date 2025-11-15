@@ -2,13 +2,19 @@
 
 ## 0.1 目的
 
-Android 向けランチャーアプリ **KafkaLauncher** を設計する。目的は：
+Android 向けホームアプリ **KafkaLauncher** は「アプリではなく行動を下部から素早く起動できる」ことを目的とする。検索とレコメンドは画面上段に集め、実際にタップする領域（アプリ・コマンド）は左下寄せで常に同じ位置に揃える。
 
-* **アプリではなく“行動”をワンタップで起動**するホームランチャー
-* 行動履歴をローカルに蓄積し、
-  ローカルスコアリング＋ **Gemini 2.5 Preview** により
-  「今このユーザーがやりたい行動」を高精度で推薦
-* 既存 Android ガイドライン（Room / DataStore / RoleManager / Structured Output など）に準拠した実装
+## 0.2 ユースケース
+
+- 左下からよく使うアプリやクイックアクションを片手でタップする
+- 右下ボタンからアプリドロワー・設定へ移動する
+- アプリドロワーでは 8 列グリッドとジャンル別プレビューを切り替えずに閲覧する
+
+## 0.3 制約
+
+- すべてローカル実装（Room/DataStore/Compose）。外部バックエンドや Gemini 連携は対象外。
+- 画面要素は再利用コンポーネント化し、設定値は `LauncherConfig` に集約する。
+- エラーハンドリングやコメントは最小限ではなく排除する。
 
 ---
 
@@ -16,144 +22,80 @@ Android 向けランチャーアプリ **KafkaLauncher** を設計する。目�
 
 ## 1.1 コンポーネント
 
-1. **Android クライアント（KafkaLauncher アプリ）**
+1. **Android クライアント**（唯一の実装ターゲット）
+   - ランチャー UI（`HomeScreen` / `AppDrawerScreen`）
+   - クイックアクション実行・行動ログ保存
+   - 設定保存（DataStore）
 
-   * ランチャー UI（HOME アプリ）
-   * 行動（QuickAction）実行
-   * 行動ログ記録（Room）
-   * 設定・ユーザー好み保存（DataStore）
-   * バックエンドとの同期
+## 1.2 技術スタック
 
-2. **Backend API**
+- Kotlin + Jetpack Compose（Material3）
+- Navigation Compose で `home` / `drawer` / `settings` を制御
+- Room（`ActionLogDao`）でアクション履歴 + 集計
+- Preferences DataStore で表示設定を保持
 
-   * `/logs/upload`：行動ログ同期
-   * `/recommendations/get`：おすすめ行動取得
-   * Gemini 2.5 API 呼び出し（Structured Output）
-
-3. **Gemini 2.5 Preview**
-
-   * モデル：`gemini-2.5-pro-preview` を想定
-   * Structured Output（JSON Schema）による
-     `recommended_actions` / `new_quick_actions` 返却
-
----
-
-# 2. Android クライアント詳細設計
-
-## 2.1 アーキテクチャ
-
-* Kotlin + Jetpack Compose
-* MVVM + UseCase レイヤ
-* 永続化：
-
-  * 行動ログ・統計 → Room（Jetpack Room）
-  * 設定・ユーザー好み → Jetpack DataStore（Preferences）
-
-### 2.1.1 パッケージ構成
+## 1.3 パッケージ構成
 
 ```text
-app/
+app/src/main/java/com/kafka/launcher
   MainActivity.kt
-  launcher/
-    LauncherViewModel.kt
-    LauncherState.kt
-    LauncherNavigation.kt
-  ui/
-    home/HomeScreen.kt
-    drawer/AppDrawerScreen.kt
-    settings/SettingsScreen.kt
-    components/
-      SearchBar.kt
-      QuickActionRow.kt
-      RecommendedSlotRow.kt
-      AppGrid.kt
-  data/
-    repo/AppRepository.kt
-    repo/QuickActionRepository.kt
-    repo/ActionLogRepository.kt
-    repo/SettingsRepository.kt
-    local/db/KafkaDatabase.kt
-    local/datastore/SettingsDataStore.kt
-  domain/
-    model/InstalledApp.kt
-    model/QuickAction.kt
-    model/UserQuickActionConfig.kt
-    model/ActionLog.kt
-    model/ActionStats.kt
-    model/Settings.kt
-    usecase/RecommendActionsUseCase.kt
-    usecase/SyncLogsUseCase.kt
-  quickactions/
-    GoogleCalendarModule.kt
-    GoogleMapsModule.kt
-    GmailModule.kt
-    DiscordModule.kt
-    BraveModule.kt
-  remote/
-    ApiClient.kt
+  config/LauncherConfig.kt
+  data/repo/*.kt
+  domain/model/*.kt
+  domain/usecase/RecommendActionsUseCase.kt
+  launcher/LauncherViewModel.kt, LauncherState.kt, LauncherNavigation.kt
+  ui/home/HomeScreen.kt
+  ui/drawer/AppDrawerScreen.kt
+  ui/components/*.kt
+  ui/settings/SettingsScreen.kt
 ```
+
+## 1.4 ビルド・Lint
+
+- `./gradlew assembleDebug`
+- `./gradlew lint`
+- `./gradlew clean build`
+
+`LauncherConfig` の値から UI レイアウト（列数やプレビュー件数）を制御する。
 
 ---
 
-## 2.2 ランチャーとしての登録
+# 2. ドメインとデータモデル
 
-### 2.2.1 AndroidManifest.xml
-
-* `HOME` カテゴリを持つ `MAIN` Activity を定義：
-
-```xml
-<activity
-    android:name=".MainActivity"
-    android:exported="true"
-    android:launchMode="singleTask">
-
-    <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.HOME" />
-        <category android:name="android.intent.category.DEFAULT" />
-    </intent-filter>
-
-</activity>
-```
-
-これは Android のホームアプリ実装の基本パターンに従う。
-
-### 2.2.2 RoleManager によるデフォルト HOME リクエスト
-
-Android 10+ では `RoleManager` の `ROLE_HOME` を使って
-デフォルトホームアプリのロールをユーザーにリクエストできる。
-
-* 起動時 or 設定画面で以下の処理を実行：
-
-1. `context.getSystemService(RoleManager::class.java)` で RoleManager を取得
-2. `isRoleAvailable(ROLE_HOME)` を確認
-3. `isRoleHeld(ROLE_HOME)` が false の場合、
-   `createRequestRoleIntent(ROLE_HOME)` の Intent を `startActivityForResult` 相当で起動
-
----
-
-## 2.3 データモデル
-
-### 2.3.1 InstalledApp
-
-ランチャーに表示するインストール済みアプリ情報。
+## 2.1 InstalledApp / AppCategory
 
 ```kotlin
 data class InstalledApp(
     val packageName: String,
+    val componentName: ComponentName,
     val label: String,
-    val icon: Drawable
+    val icon: Drawable,
+    val category: AppCategory,
+    val isPinned: Boolean = false
 )
+
+enum class AppCategory(val priority: Int) {
+    COMMUNICATION(0),
+    WORK(1),
+    MEDIA(2),
+    TRAVEL(3),
+    GAMES(4),
+    TOOLS(5),
+    OTHER(6)
+}
 ```
 
-取得ロジック：
+`AppRepository` が `ApplicationInfo.category` を `AppCategory` に丸め、同 priority 順でドロワー表示する。マッピング例：
 
-* `PackageManager` の `queryIntentActivities` で
-  `ACTION_MAIN` + `CATEGORY_LAUNCHER` を持つ Activity を列挙。
+- `CATEGORY_SOCIAL` / `CATEGORY_NEWS` → `COMMUNICATION`
+- `CATEGORY_PRODUCTIVITY` → `WORK`
+- `CATEGORY_AUDIO` / `CATEGORY_VIDEO` / `CATEGORY_IMAGE` → `MEDIA`
+- `CATEGORY_MAPS` → `TRAVEL`
+- `CATEGORY_GAME` → `GAMES`
+- `CATEGORY_ACCESSIBILITY` → `TOOLS`
+- その他は `OTHER`
 
-### 2.3.2 QuickAction（行動）
-
-「行いたい行動」を抽象化した UI 実行単位。
+## 2.2 QuickAction
 
 ```kotlin
 data class QuickAction(
@@ -161,463 +103,121 @@ data class QuickAction(
     val providerId: String,
     val label: String,
     val actionType: ActionType,
-    val param: String?,
-    val iconResId: Int?,
-    val priority: Int
-)
-
-enum class ActionType {
-    OPEN_APP,
-    WEB_SEARCH,
-    MAP_NAVIGATION,
-    CALENDAR_VIEW,
-    CALENDAR_INSERT,
-    EMAIL_COMPOSE,
-    DISCORD_OPEN
-}
-```
-
-* `providerId`：
-
-  * `"google_maps"`, `"google_calendar"`, `"gmail"`, `"discord"`, `"brave"` など
-* `param`：
-
-  * Maps：住所または検索クエリ
-  * Brave：URLまたは検索クエリ
-  * Discord：チャンネルID/URL など
-
-### 2.3.3 UserQuickActionConfig
-
-ユーザー定義のカスタム行動。
-
-```kotlin
-data class UserQuickActionConfig(
-    val id: String,
-    val providerId: String,
-    val label: String,
-    val actionType: ActionType,
-    val param: String
+    val data: String? = null,
+    val packageName: String? = null,
+    val priority: Int = 0
 )
 ```
 
-* 永続化：Room または DataStore（件数が少ないのでどちらでも可）
+`RecommendActionsUseCase` が `ActionStats` に基づきおすすめ順を返し、`LauncherState.recommendedActions` で消費する。`QuickActionRow` はホーム下部に移設し、左下に並ぶよう LazyRow を維持する。
 
-### 2.3.4 ActionLog（行動履歴）
-
-Room の Entity として定義。
+## 2.3 ActionLog / ActionStats
 
 ```kotlin
-enum class TimeSlot { MORNING, DAYTIME, EVENING, NIGHT }
-
-enum class NetworkType { WIFI, CELLULAR, OFFLINE }
-
 @Entity(tableName = "action_logs")
 data class ActionLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val timestamp: Long,             // epoch millis
-    val actionType: ActionType,
-    val packageName: String?,
-    val quickActionId: String?,
-    val query: String?,
-    val timeSlot: TimeSlot,
-    val dayOfWeek: Int,              // ISO-8601: 1=Mon ... 7=Sun
-    val networkType: NetworkType,
-    val isCharging: Boolean
+    val actionId: String,
+    val timestamp: Long
 )
-```
 
-Room は SQLite に対する抽象レイヤとして Entity / DAO / Database で構成する。
-
-### 2.3.5 ActionStats（暗黙フィードバック）
-
-おすすめスロットでの表示回数・クリック回数。
-
-```kotlin
-@Entity(tableName = "action_stats")
 data class ActionStats(
-    @PrimaryKey val quickActionId: String,
-    val impressions: Int,
-    val clicks: Int
+    val actionId: String,
+    val count: Long
 )
 ```
 
-### 2.3.6 Settings（DataStore）
+`ActionLogRepository` は `ActionLogDao` に委譲し、`stats(limit)` で上位利用アクションを Flow で返す。
 
-DataStore は SharedPreferences の代替として非同期・トランザクションな保存を提供する。
-
-保持項目：
-
-* `preferredSlotCount: Int`（3〜5）
-* `pinnedIds: Set<String>`
-* `hiddenIds: Set<String>`
-* `precisionMode: Boolean`
-* `loggingEnabled: Boolean`
-* `geminiSyncEnabled: Boolean`
-
----
-
-## 2.4 Repository 層
-
-### 2.4.1 AppRepository
-
-責務：
-
-* インストール済みアプリの一覧取得
-* `PackageManager` と `LauncherApps` API のラッパ
-
-### 2.4.2 QuickActionRepository
-
-責務：
-
-* 各 `QuickActionProvider` から QuickAction を収集
-* `UserQuickActionConfig` を読み込んで QuickAction を生成
-* `hiddenIds` を除外
-* `QuickActionIntentFactory` で Intent を構築し、未インストールの依存アプリを参照する行動は一覧から排除
-* `PACKAGE_ADDED/REMOVED/CHANGED` ブロードキャストで即時リロード
-
-### 2.4.3 ActionLogRepository
-
-責務：
-
-* `ActionLog` の insert / query / rotation
-* 古いログの削除（最大 50,000 件 / 90 日など）
-
-Room DAO 例（抽象）：
-
-* `insert(log: ActionLog)`
-* `getRecentLogs(limit: Int, since: Long): List<ActionLog>`
-* `deleteOlderThan(timestamp: Long)`
-* `count(): Long`
-
-### 2.4.4 SettingsRepository
-
-責務：
-
-* DataStore の読み書き（Flow で observe）
-
----
-
-## 2.5 UseCase 層（ロジック）
-
-### 2.5.1 ActionExecutor
-
-すべての行動を通す「実行ゲート」。
+## 2.4 Settings
 
 ```kotlin
-class ActionExecutor(
-    private val context: Context,
-    private val logRepo: ActionLogRepository,
-    private val statsRepo: ActionStatsRepository
-) {
-    fun executeQuickAction(action: QuickAction, now: Long, contextInfo: ContextInfo) {
-        logRepo.insert(action.toActionLog(now, contextInfo))
-        statsRepo.incrementClick(action.id)
-        action.toIntent(context).let { context.startActivity(it) }
-    }
+data class Settings(
+    val showFavorites: Boolean = true,
+    val appSort: AppSort = AppSort.NAME
+)
 
-    fun recordImpression(actionId: String) {
-        statsRepo.incrementImpression(actionId)
-    }
-}
+enum class AppSort { NAME, USAGE }
 ```
 
-* UI からは **必ず ActionExecutor 経由で実行**
-  → ログと統計が抜け漏れなく保存される
+## 2.5 LauncherState
 
-### 2.5.2 RecommendActionsUseCase（ローカル）
+`LauncherViewModel` が Flow で公開する状態：
 
-ローカルスコアリングの責務：
+- `searchQuery`
+- `quickActions` / `recommendedActions`
+- `installedApps`（ソート済み）
+- `filteredApps`（検索結果）
+- `categorizedApps: Map<AppCategory, List<InstalledApp>>`
+- `favoriteApps`
+- `settings`
+- `navigationInfo`
+- `isLoading`
 
-1. `ActionLogRepository` から直近 N 件（例：300件）取得
-2. `QuickActionRepository` から現在有効な QuickAction 一覧を取得
-3. スコアリング
-4. スコアがしきい値以上のものを「候補セット」として抽出
-5. precisionMode に応じたフィルタリング
+## 2.6 Repository 責務
+
+- **AppRepository**: インストール済みアプリ列挙、カテゴリ判定、検索フィルタ
+- **QuickActionRepository**: 行動定義の監視とフィルタ
+- **ActionLogRepository**: 実行ログ書き込み、利用頻度算出
+- **SettingsRepository**: DataStore から `Settings` Flow を提供
 
 ---
 
-# 3. ローカル推薦ロジックの詳細
+# 3. UI レイアウト方針
 
-## 3.1 スコア要素
+## 3.1 ホーム画面
 
-各 `quickActionId` について以下を計算：
+- レイアウトは `Column` を `Box` でラップし、上段（検索・おすすめ）と下段（タップ領域）を明確に分離。
+- 上段：
+  - プログレス → サーチバー → 検索中は `SearchResults`
+  - 非検索時は `Recommended` セクションのみを上段に残す。
+  - ナビゲーションモードが 3 ボタンの場合は注意書きを上段末尾に表示。
+- 下段：`BottomLauncherDock`
+  - 左側を `Modifier.weight(1f)` で広く確保し、`FavoriteAppsRow` → `QuickActionRow`（`LauncherConfig.bottomQuickActionLimit` 件）を縦に積む。両方とも左下起点。
+  - 右側に `Drawer` / `Settings` ボタンを縦配置して親指で押しやすくする。
+  - `state.favoriteApps` が空でもスペースを保持し、下寄せを崩さない。
 
-* `Sf`：頻度スコア（30 日以内の実行回数を正規化）
-* `Sr`：直近スコア（最後の実行時刻に基づく）
-* `St`：時間帯スコア（現在の timeSlot での利用の多さ）
-* `Sd`：曜日スコア（現在の dayOfWeek での利用の多さ）
-* `Sp`：直前アクション ペアスコア（`prevActionId -> actionId` の遷移頻度）
-* `Su`：ユーザー Feedback（ピン留め / 非表示）
+## 3.2 アプリドロワー
 
-## 3.2 重みづけ
+- サーチバーは最上段固定。検索中は `state.filteredApps` を 8 列グリッドで全画面表示。
+- 非検索時も同じ 8 列 (`GridCells.Fixed(LauncherConfig.appsPerRow)`) で全アプリを表示し、下部に余白を入れてオーバーレイを配置する。
+- ボトムオーバーレイは画面幅いっぱいの `Surface` を `Alignment.BottomStart` に配置し、カテゴリプレビューと説明をまとめる。
 
-```text
-S =  w_f * Sf
-   + w_r * Sr
-   + w_t * St
-   + w_d * Sd
-   + w_p * Sp
-   + w_u * Su
-```
+## 3.3 ジャンルパネル
 
-初期値例：
+- 見出しは `strings.xml` の `categories_title`。
+- `LazyRow` で `AppCategory` ごとのカードを並べ、各カードには最大 `LauncherConfig.categoryPreviewLimit` 個のアイコンを表示。`AppGrid` と同じ `AppIcon` を再利用。
+- カードをタップすると最初のアプリで即起動する。より細かい選択は上の 8 列グリッドで行うためモックアップ禁止。
 
-* `w_f = 1.0`（頻度）
-* `w_r = 2.0`（直近）
-* `w_t = 1.5`（時間帯）
-* `w_d = 1.0`（曜日）
-* `w_p = 2.0`（ペア）
-* `w_u = 5.0`（ユーザー）
+## 3.4 よく使う領域
 
-### 3.2.1 各要素の定義（例）
-
-* `Sf`：
-
-  * 過去30日間の実行回数 `count30` に対し
-    `Sf = log(1 + count30)`（対数で飽和）
-
-* `Sr`：
-
-  * `delta = now - lastTimestamp`
-  * 1時間以内：`Sr=3`
-  * 当日：`Sr=2`
-  * 3日以内：`Sr=1`
-  * それ以降：`Sr=0`
-
-* `St`：
-
-  * 現在の `timeSlot` における実行回数を集計し、
-    全時間帯での実行回数で正規化して 0〜1 にスケール
-
-* `Sd`：
-
-  * 現在の `dayOfWeek` での実行回数 / 全実行回数
-
-* `Sp`：
-
-  * 直前に実行された `prevActionId` からの遷移回数
-    `transition(prevActionId, actionId)` を
-    全遷移で正規化した値
-
-* `Su`：
-
-  * ピン留めされている：`Su = +1`
-  * 「今後表示しない」指定：`Su = -1`
-  * それ以外：`Su = 0`
-
-## 3.3 precisionMode におけるしきい値
-
-設定 `precisionMode = true` のとき：
-
-* スコア `S < T` のアクションは**おすすめ候補から除外**
-* `T` の初期値例：`T = 3.0`
-* 候補が 0 件のとき：
-
-  * 「おすすめスロット」は空にし、
-    Fallback として「最近使った行動」や「ピン留め行動」を表示
+- `LauncherConfig.favoritesLimit` で左下ラインのアプリ数を制御。QuickAction の下限／上限は `LauncherConfig.bottomQuickActionLimit`。
+- すべての下段要素を `PaddingValues(bottom = 24.dp)` で包み、親指が届く高さを維持。
 
 ---
 
-# 4. Gemini 2.5 連携ロジック
+# 4. データ保持と同期
 
-Google の Gemini API は `response_mime_type: "application/json"` と
-`response_json_schema` で構造化出力をサポートする。
+## 4.1 Room
 
-## 4.1 呼び出しタイミング
+- `action_logs` テーブルのみを保持し、`ActionLogDao` で `insert`, `recent(limit)`, `stats(limit)` を提供。
+- データはローカル専用で、アンインストール時に削除される。
 
-* ホーム画面が前面に出たとき
-* 前回の Gemini 呼び出しから **15分以上経過**している
-* `geminiSyncEnabled = true` のときのみ
+## 4.2 DataStore
 
-## 4.2 Backend へのリクエスト
+- `showFavorites` と `appSort` を Preferences DataStore に保存。
+- ホーム画面の左下領域は `showFavorites=false` の場合でも空き枠を確保する。
 
-Android → Backend:
+## 4.3 LauncherConfig
 
-```json
-{
-  "user_id": "device-xxxxxxxx",
-  "timestamp": 1731651000000,
-  "mode": "recommend_only",
-  "context": {
-    "time_slot": "EVENING",
-    "day_of_week": 5,
-    "battery": { "is_charging": true, "level": 0.78 },
-    "network": { "type": "WIFI", "is_metered": false },
-    "location": { "coarse_area": "Osaka", "home_distance_m": 5100, "work_distance_m": 850 }
-  },
-  "action_logs": [ ... 最新300件 ... ],
-  "current_quick_actions": [ ... ],
-  "user_settings": {
-    "preferred_slot_count": 4,
-    "pinned_ids": ["maps_nav_home"],
-    "hidden_ids": ["discord_spam_channel"],
-    "precision_mode": true
-  }
-}
-```
+| Key | 役割 |
+| --- | --- |
+| `statsLimit` | `ActionLogRepository.stats` の取得件数 |
+| `recommendationFallbackCount` | レコメンドのフォールバック数 |
+| `favoritesLimit` | 左下に出すアプリ数 |
+| `appsPerRow` | ドロワーの列数（固定 8）|
+| `categoryPreviewLimit` | ジャンルカード内アイコンの最大数 |
+| `bottomQuickActionLimit` | 下段クイックアクションの表示数 |
+| `appUsagePrefix` | ログ ID プレフィックス |
 
-Backend ではこの JSON をそのまま Gemini に渡すか、必要に応じて前処理。
-
-## 4.3 Gemini Structured Output のスキーマ
-
-Gemini API の Structured Output 仕様に合わせて JSON Schema を指定する。
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "recommended_actions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "quick_action_id": { "type": "string" },
-          "confidence": { "type": "number" },
-          "reason": { "type": "string" }
-        },
-        "required": ["quick_action_id", "confidence"]
-      }
-    },
-    "new_quick_actions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "provider_id": { "type": "string" },
-          "suggested_id": { "type": "string" },
-          "label": { "type": "string" },
-          "action_type": { "type": "string" },
-          "param": { "type": "string" },
-          "reason": { "type": "string" }
-        },
-        "required": [
-          "provider_id",
-          "suggested_id",
-          "label",
-          "action_type",
-          "param"
-        ]
-      }
-    }
-  },
-  "required": ["recommended_actions"]
-}
-```
-
-* `response_mime_type = "application/json"`
-* `response_json_schema = 上記` を指定
-
-## 4.4 Gemini へのプロンプト（概要）
-
-* system：
-
-  * ランチャーの行動推薦エンジンとしての役割
-  * `current_quick_actions` の ID 以外を推奨しないこと
-  * 破壊的行動を提案しないこと
-
-* user：
-
-  * `action_logs`、`context`、`current_quick_actions`、`user_settings` を含む JSON を base64 エンコードして渡す
-
-## 4.5 Backend → Android の返却形式
-
-Backend は Gemini のレスポンスを受け取り、
-Android クライアント向けに整形：
-
-```json
-{
-  "slot_recommendations": [
-    "maps_nav_work",
-    "brave_search_recent",
-    "discord_last_channel"
-  ],
-  "slot_confidence": {
-    "maps_nav_work": 0.92,
-    "brave_search_recent": 0.78,
-    "discord_last_channel": 0.65
-  },
-  "new_action_candidates": [
-    {
-      "id": "maps_nav_home_evening",
-      "provider_id": "google_maps",
-      "label": "帰宅ルートを見る",
-      "action_type": "MAP_NAVIGATION",
-      "param": "home_address"
-    }
-  ]
-}
-```
-
-Android 側は：
-
-* `slot_recommendations`：
-
-  * スロット数 `preferredSlotCount` までをおすすめスロットに表示
-* `new_action_candidates`：
-
-  * 設定画面やダイアログで「追加候補」として表示
-  * ユーザーが明示的に承認したものだけ `UserQuickActionConfig` として保存
-
----
-
-# 5. UI ロジック
-
-## 5.1 ホーム画面
-
-1. 描画フロー
-
-   * `LauncherViewModel` が `LauncherState` を Flow で expose
-   * state:
-
-     * `recommendedActions: List<QuickAction>`
-     * `pinnedActions: List<QuickAction>`
-     * `frequentApps: List<InstalledApp>`
-     * `searchQuery: String`
-     * `searchResults: List<SearchResultItem>`
-
-2. コンポーネント
-
-   * 上部：検索バー
-   * その下：おすすめ行動スロット（Gemini or ローカル）
-   * その下：ピン留め行動
-   * 下部：ドロワーへ遷移する「↑」ボタン
-
-3. イベント
-
-   * スロット表示時：`ActionExecutor.recordImpression(action.id)`
-   * タップ時：`ActionExecutor.executeQuickAction(action, now, contextInfo)`
-   * 長押し：
-
-     * ピン留め / ピン解除
-     * 今後表示しない
-     * 詳細を見る（reason / 統計）
-
-## 5.2 アプリドロワー
-
-* `AppRepository` から取得した `InstalledApp` のグリッド表示
-* アプリアイコン長押し → 「クイックアクションに追加」など
-
----
-
-# 6. データ保持とプライバシー
-
-## 6.1 ローカル保持
-
-* `ActionLog`：最大 50,000 件 or 90 日を上限にローテーション
-* `ActionStats`：全 QuickAction の統計（件数は少ない）
-* `Settings`：DataStore（Preferences）
-
-Room / DataStore はローカルストレージにデータを保持し、
-アプリアンインストールで削除される。
-
-## 6.2 バックエンド／Gemini 側
-
-* バックエンド DB：最大 365 日（1年）保持、日次バッチで削除
-* Gemini API には行動ログ一部（直近 max 300 件）＋集計情報のみ送信
-* `loggingEnabled = false` の場合：
-
-  * 行動ログの保存自体を行わない
-* `geminiSyncEnabled = false` の場合：
-
-  * ログはローカルのみ（Backend 送信なし）
-  * おすすめは完全にローカルスコアリングのみで生成
+これらの値を変えると UI の行動数／並びが即時反映される。

@@ -1,5 +1,6 @@
 package com.kafka.launcher.launcher
 
+import com.kafka.launcher.domain.model.AppCategory
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.QuickAction
@@ -12,6 +13,7 @@ data class LauncherState(
     val recommendedActions: List<QuickAction> = emptyList(),
     val installedApps: List<InstalledApp> = emptyList(),
     val filteredApps: List<InstalledApp> = emptyList(),
+    val categorizedApps: Map<AppCategory, List<InstalledApp>> = emptyMap(),
     val favoriteApps: List<InstalledApp> = emptyList(),
     val settings: Settings = Settings(),
     val navigationInfo: NavigationInfo = NavigationInfo(),

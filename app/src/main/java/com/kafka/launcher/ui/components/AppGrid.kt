@@ -2,6 +2,7 @@ package com.kafka.launcher.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,19 +17,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.domain.model.InstalledApp
 
 @Composable
 fun AppGrid(
     apps: List<InstalledApp>,
     onAppClick: (InstalledApp) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(96.dp),
+        columns = GridCells.Fixed(LauncherConfig.appsPerRow),
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = contentPadding
     ) {
         items(apps, key = { it.componentName.flattenToString() }) { app ->
             AppTile(app = app, onClick = { onAppClick(app) })
@@ -43,7 +47,7 @@ private fun AppTile(app: InstalledApp, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(8.dp)
         ) {
-            AppIcon(app = app, size = 56.dp)
+            AppIcon(app = app, size = 40.dp)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = app.label,

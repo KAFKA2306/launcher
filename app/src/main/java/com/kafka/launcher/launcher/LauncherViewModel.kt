@@ -8,6 +8,7 @@ import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.domain.model.ActionStats
+import com.kafka.launcher.domain.model.AppCategory
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.NavigationInfo
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.LinkedHashMap
 
 class LauncherViewModel(
     private val appRepository: AppRepository,
@@ -126,12 +128,14 @@ class LauncherViewModel(
         val sortedApps = sortApps(cachedApps, _state.value.settings.appSort)
         val filteredApps = if (query.isBlank()) sortedApps else appRepository.filter(sortedApps, query)
         val filteredQuickActions = if (query.isBlank()) emptyList() else quickActionRepository.filter(query)
+        val categorized = categorizeApps(sortedApps)
         _state.update {
             it.copy(
                 searchQuery = query,
                 installedApps = sortedApps,
                 filteredApps = filteredApps,
-                filteredQuickActions = filteredQuickActions
+                filteredQuickActions = filteredQuickActions,
+                categorizedApps = categorized
             )
         }
     }
@@ -177,4 +181,18 @@ class LauncherViewModel(
     }
 
     private fun appUsageKey(packageName: String) = "${LauncherConfig.appUsagePrefix}$packageName"
+
+    private fun categorizeApps(apps: List<InstalledApp>): Map<AppCategory, List<InstalledApp>> {
+        if (apps.isEmpty()) return emptyMap()
+        val grouped = apps.groupBy { it.category }
+        val ordered = AppCategory.values().sortedBy { it.priority }
+        val result = LinkedHashMap<AppCategory, List<InstalledApp>>()
+        ordered.forEach { category ->
+            val items = grouped[category]
+            if (!items.isNullOrEmpty()) {
+                result[category] = items
+            }
+        }
+        return result
+    }
 }

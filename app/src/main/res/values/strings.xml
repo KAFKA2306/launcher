@@ -22,4 +22,12 @@
     <string name="navigation_notice_title">システムのナビゲーション</string>
     <string name="navigation_notice_body_restricted">%1$s 端末ではシステムによりジェスチャーナビゲーションが無効化され、戻る/ホーム/タスクキーの3ボタン操作のみ利用できます。</string>
     <string name="navigation_notice_body_three_button">現在は3ボタンナビゲーションが有効です。画面下部の戻る/ホーム/タスクキーを利用してください。</string>
+    <string name="categories_title">ジャンル別</string>
+    <string name="category_communication">コミュニケーション</string>
+    <string name="category_work">仕事</string>
+    <string name="category_media">メディア</string>
+    <string name="category_travel">移動</string>
+    <string name="category_games">ゲーム</string>
+    <string name="category_tools">ツール</string>
+    <string name="category_other">その他</string>
 </resources>

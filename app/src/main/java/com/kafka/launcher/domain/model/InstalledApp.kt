@@ -8,5 +8,6 @@ data class InstalledApp(
     val componentName: ComponentName,
     val label: String,
     val icon: Drawable,
+    val category: AppCategory,
     val isPinned: Boolean = false
 )
