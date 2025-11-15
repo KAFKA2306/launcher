@@ -44,6 +44,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 | --- | --- |
 | GoogleCalendarModule | 今日の予定、イベント作成（それぞれ Calendar VIEW / INSERT） |
 | GoogleMapsModule | `geo:0,0?q=` / `google.navigation:q=` を使うマップ検索・ナビ |
+| GoogleAppsModule | Google検索/画像/ニュースに加え、Drive・Docs/Sheets/Slides作成、Meet/Keep/Photos/YouTube など |
 | GmailModule | Inbox 起動、メール作成（`mailto:`） |
 | DiscordModule | Discord アプリ起動に加えて `LauncherConfig.discordShortcuts` の Deep Link（既定では DM 一覧、Discord Testers #faq） |
 | BraveModule | Brave 起動、Brave検索、固定 URL（X / Perplexity / VRChat） |

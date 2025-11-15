@@ -31,6 +31,7 @@ import com.kafka.launcher.launcher.LauncherViewModelFactory
 import com.kafka.launcher.quickactions.BraveModule
 import com.kafka.launcher.quickactions.DiscordModule
 import com.kafka.launcher.quickactions.GmailModule
+import com.kafka.launcher.quickactions.GoogleAppsModule
 import com.kafka.launcher.quickactions.GoogleCalendarModule
 import com.kafka.launcher.quickactions.GoogleMapsModule
 import com.kafka.launcher.quickactions.QuickActionExecutor
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
                 listOf(
                     GoogleCalendarModule(),
                     GoogleMapsModule(),
+                    GoogleAppsModule(),
                     GmailModule(),
                     DiscordModule(),
                     BraveModule()
