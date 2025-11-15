@@ -2,6 +2,7 @@ package com.kafka.launcher
 
 import android.app.role.RoleManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -94,6 +95,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun ensureHomeRole() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         val roleManager = getSystemService(RoleManager::class.java) ?: return
         if (!roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) return
         if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) return

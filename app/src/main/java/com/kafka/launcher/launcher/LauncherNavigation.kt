@@ -8,7 +8,6 @@ import androidx.navigation.compose.rememberNavController
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
-import com.kafka.launcher.domain.model.Settings
 import com.kafka.launcher.ui.drawer.AppDrawerScreen
 import com.kafka.launcher.ui.home.HomeScreen
 import com.kafka.launcher.ui.settings.SettingsScreen
