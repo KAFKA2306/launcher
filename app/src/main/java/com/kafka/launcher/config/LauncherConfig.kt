@@ -1,5 +1,7 @@
 package com.kafka.launcher.config
 
+import com.kafka.launcher.domain.model.AppSort
+
 data class DiscordShortcut(
     val id: String,
     val label: String,
@@ -21,6 +23,7 @@ object LauncherConfig {
     const val navigationModeThreeButtonValue = 0
     val gestureUnsupportedManufacturers = setOf("xiaomi", "redmi", "poco", "blackshark")
     const val appUsagePrefix = "app:"
+    val defaultAppSort = AppSort.USAGE
     const val discordPackageName = "com.discord"
     private const val discordChannelBaseUrl = "https://discord.com/channels"
     val discordShortcuts = listOf(
