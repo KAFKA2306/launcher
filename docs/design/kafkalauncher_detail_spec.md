@@ -2,13 +2,13 @@
 
 ## 0.1 目的
 
-Android 向けホームアプリ **KafkaLauncher** は「アプリではなく行動を下部から素早く起動できる」ことを目的とする。検索とレコメンドは画面上段に集め、実際にタップする領域（アプリ・コマンド）は左下寄せで常に同じ位置に揃える。
+Android 向けホームアプリ **KafkaLauncher** は「アプリではなく行動をホーム最下部からワンタップで呼び出す」ことを目的とする。検索・レコメンド・アプリグリッドなど実際に触れる要素はすべて下端に寄せ、設定やシステム情報は上部へ逃がす。
 
 ## 0.2 ユースケース
 
-- 左下からよく使うアプリやクイックアクションを片手でタップする
-- 右下ボタンからアプリドロワー・設定へ移動する
-- アプリドロワーでは 8 列グリッドとジャンル別プレビューを切り替えずに閲覧する
+- 左下からよく使う/最近使ったアプリやクイックアクションを片手でタップする
+- 設定は画面上部のボタンからのみ呼び出し、誤タップを避ける
+- ホーム下半分に常設した 8 列グリッドでアプリ一覧を即座に開く
 
 ## 0.3 制約
 
@@ -150,6 +150,7 @@ enum class AppSort { NAME, USAGE }
 - `filteredApps`（検索結果）
 - `categorizedApps: Map<AppCategory, List<InstalledApp>>`
 - `favoriteApps`
+- `recentApps`
 - `settings`
 - `navigationInfo`
 - `isLoading`
@@ -157,7 +158,7 @@ enum class AppSort { NAME, USAGE }
 ## 2.6 Repository 責務
 
 - **AppRepository**: インストール済みアプリ列挙、カテゴリ判定、検索フィルタ
-- **QuickActionRepository**: 行動定義の監視とフィルタ
+- **QuickActionRepository**: 行動定義の監視とフィルタ。`QuickActionIntentFactory`で実行可能性を検証し、Discord Deep Linkを含むすべての行動を端末状態に合わせて絞り込み、ブロードキャスト受信後に即リロード。再計算した一覧は `QuickActionAuditLogger` を通じて `Android/data/com.kafka.launcher/files/logs/quickactions_snapshot.txt` へ書き出す。
 - **ActionLogRepository**: 実行ログ書き込み、利用頻度算出
 - **SettingsRepository**: DataStore から `Settings` Flow を提供
 
@@ -167,15 +168,15 @@ enum class AppSort { NAME, USAGE }
 
 ## 3.1 ホーム画面
 
-- レイアウトは `Column` を `Box` でラップし、上段（検索・おすすめ）と下段（タップ領域）を明確に分離。
+- 画面は「上段=制御」「下段=操作」の 2 層で構成する。
 - 上段：
-  - プログレス → サーチバー → 検索中は `SearchResults`
-  - 非検索時は `Recommended` セクションのみを上段に残す。
-  - ナビゲーションモードが 3 ボタンの場合は注意書きを上段末尾に表示。
-- 下段：`BottomLauncherDock`
-  - 左側を `Modifier.weight(1f)` で広く確保し、`FavoriteAppsRow` → `QuickActionRow`（`LauncherConfig.bottomQuickActionLimit` 件）を縦に積む。両方とも左下起点。
-  - 右側に `Drawer` / `Settings` ボタンを縦配置して親指で押しやすくする。
-  - `state.favoriteApps` が空でもスペースを保持し、下寄せを崩さない。
+  - 左にドロワー（フルスクリーン一覧）ボタン、右に設定ボタンのみを置き、普段触らない要素をここへ追いやる。
+  - 3 ボタン専用ナビ注意は上段の下に差し込む。
+- 下段（常に画面の 60% 以上を占有）：
+  - `BottomLauncherPanel` を `Box` で下端に貼り付け、`navigationBarsPadding()` を必ず適用して 3 ボタンと重ならないようにする。
+  - セクション順序は `SearchBar` → `SearchResults or RecommendedRow` → `RecentAppsRow` → `FavoriteAppsRow` → `QuickActionRow` → `AppGrid`.
+  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`heightIn(min = homeGridMinHeight)` を与えて画面の半分を必ず占有し、内部スクロールで全件を辿る。
+  - すべての見出しとアクションを左下基準で揃え、縦方向のスクロールのみで完結させる。
 
 ## 3.2 アプリドロワー
 
@@ -189,10 +190,11 @@ enum class AppSort { NAME, USAGE }
 - `LazyRow` で `AppCategory` ごとのカードを並べ、各カードには最大 `LauncherConfig.categoryPreviewLimit` 個のアイコンを表示。`AppGrid` と同じ `AppIcon` を再利用。
 - カードをタップすると最初のアプリで即起動する。より細かい選択は上の 8 列グリッドで行うためモックアップ禁止。
 
-## 3.4 よく使う領域
+## 3.4 よく使う / 最近の領域
 
-- `LauncherConfig.favoritesLimit` で左下ラインのアプリ数を制御。QuickAction の下限／上限は `LauncherConfig.bottomQuickActionLimit`。
-- すべての下段要素を `PaddingValues(bottom = 24.dp)` で包み、親指が届く高さを維持。
+- `LauncherConfig.favoritesLimit` をホーム下段での「よく使う」枠数に使う。
+- `LauncherConfig.recentLimit` を使い `ActionLogRepository.recent` の結果から最近起動アプリを抽出し、`FavoriteAppsRow` を流用して表示する。
+- 検索やレコメンドと同じく、この領域も `BottomLauncherPanel` 内で下寄せ配置し、スクロールせずとも 3〜5 件は常に見えるよう `Spacer` を抑制する。
 
 ---
 
@@ -214,10 +216,12 @@ enum class AppSort { NAME, USAGE }
 | --- | --- |
 | `statsLimit` | `ActionLogRepository.stats` の取得件数 |
 | `recommendationFallbackCount` | レコメンドのフォールバック数 |
-| `favoritesLimit` | 左下に出すアプリ数 |
-| `appsPerRow` | ドロワーの列数（固定 8）|
+| `favoritesLimit` | ホームで表示する「よく使う」最大件数 |
+| `recentLimit` | 最近起動アプリの抽出件数 |
+| `appsPerRow` | ホーム/ドロワー共通のグリッド列数（固定 8）|
 | `categoryPreviewLimit` | ジャンルカード内アイコンの最大数 |
 | `bottomQuickActionLimit` | 下段クイックアクションの表示数 |
+| `homeGridMinHeightDp` | ホーム常設グリッドの最小高さ（dp） |
 | `appUsagePrefix` | ログ ID プレフィックス |
 
 これらの値を変えると UI の行動数／並びが即時反映される。

@@ -3,6 +3,7 @@ package com.kafka.launcher.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.InstalledApp
@@ -34,6 +35,7 @@ import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.NavigationMode
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.launcher.LauncherState
+import com.kafka.launcher.ui.components.AppGrid
 import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
@@ -53,110 +55,21 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
     val dockQuickActions = state.quickActions.take(LauncherConfig.bottomQuickActionLimit)
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-            ) {
-                if (state.isLoading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                KafkaSearchBar(
-                    value = state.searchQuery,
-                    placeholder = stringResource(id = R.string.search_placeholder),
-                    onValueChange = onSearchQueryChange,
-                    onClear = onClearSearch
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                if (state.searchQuery.isNotBlank()) {
-                    SearchResults(
-                        actions = state.filteredQuickActions,
-                        apps = state.filteredApps,
-                        onQuickActionClick = onQuickActionClick,
-                        onAppClick = onAppClick
-                    )
-                } else {
-                    QuickActionRow(
-                        title = stringResource(id = R.string.recommended_title),
-                        actions = state.recommendedActions,
-                        onActionClick = onRecommendedClick
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+        if (state.isLoading) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(12.dp))
         }
-        BottomLauncherDock(
-            favorites = state.favoriteApps,
-            showFavorites = state.settings.showFavorites,
-            quickActions = dockQuickActions,
-            onAppClick = onAppClick,
-            onQuickActionClick = onQuickActionClick,
-            onOpenDrawer = onOpenDrawer,
-            onOpenSettings = onOpenSettings
-        )
-    }
-}
-
-@Composable
-private fun BottomLauncherDock(
-    favorites: List<InstalledApp>,
-    showFavorites: Boolean,
-    quickActions: List<QuickAction>,
-    onAppClick: (InstalledApp) -> Unit,
-    onQuickActionClick: (QuickAction) -> Unit,
-    onOpenDrawer: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.Bottom
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (showFavorites && favorites.isNotEmpty()) {
-                FavoriteAppsRow(
-                    title = stringResource(id = R.string.favorites_title),
-                    apps = favorites,
-                    onAppClick = onAppClick
-                )
-            }
-            QuickActionRow(
-                title = stringResource(id = R.string.actions_title),
-                actions = quickActions,
-                onActionClick = onQuickActionClick
-            )
-        }
-        Column(
-            modifier = Modifier.widthIn(min = 140.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            Button(onClick = onOpenDrawer, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onOpenDrawer, modifier = Modifier.weight(1f)) {
                 Icon(
                     painter = painterResource(id = LauncherIcons.Drawer),
                     contentDescription = stringResource(id = R.string.drawer_button)
@@ -164,10 +77,122 @@ private fun BottomLauncherDock(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(text = stringResource(id = R.string.drawer_button))
             }
-            Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onOpenSettings, modifier = Modifier.weight(1f)) {
                 Text(text = stringResource(id = R.string.settings_button))
             }
         }
+        Spacer(modifier = Modifier.height(12.dp))
+        if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
+            NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        BottomLauncherPanel(
+            state = state,
+            quickActions = dockQuickActions,
+            onSearchQueryChange = onSearchQueryChange,
+            onClearSearch = onClearSearch,
+            onRecommendedClick = onRecommendedClick,
+            onAppClick = onAppClick,
+            onQuickActionClick = onQuickActionClick,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun BottomLauncherPanel(
+    state: LauncherState,
+    quickActions: List<QuickAction>,
+    onSearchQueryChange: (String) -> Unit,
+    onClearSearch: () -> Unit,
+    onRecommendedClick: (QuickAction) -> Unit,
+    onAppClick: (InstalledApp) -> Unit,
+    onQuickActionClick: (QuickAction) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val panelScrollState = rememberScrollState()
+    val isSearching = state.searchQuery.isNotBlank()
+    Box(
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .verticalScroll(panelScrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            KafkaSearchBar(
+                value = state.searchQuery,
+                placeholder = stringResource(id = R.string.search_placeholder),
+                onValueChange = onSearchQueryChange,
+                onClear = onClearSearch
+            )
+            if (isSearching) {
+                SearchResults(
+                    actions = state.filteredQuickActions,
+                    apps = state.filteredApps,
+                    onQuickActionClick = onQuickActionClick,
+                    onAppClick = onAppClick
+                )
+            } else {
+                QuickActionRow(
+                    title = stringResource(id = R.string.recommended_title),
+                    actions = state.recommendedActions,
+                    onActionClick = onRecommendedClick
+                )
+                if (state.recentApps.isNotEmpty()) {
+                    FavoriteAppsRow(
+                        title = stringResource(id = R.string.recents_title),
+                        apps = state.recentApps,
+                        onAppClick = onAppClick
+                    )
+                }
+                if (state.settings.showFavorites && state.favoriteApps.isNotEmpty()) {
+                    FavoriteAppsRow(
+                        title = stringResource(id = R.string.favorites_title),
+                        apps = state.favoriteApps,
+                        onAppClick = onAppClick
+                    )
+                }
+                QuickActionRow(
+                    title = stringResource(id = R.string.actions_title),
+                    actions = quickActions,
+                    onActionClick = onQuickActionClick
+                )
+            }
+            AppGridSection(apps = state.installedApps, onAppClick = onAppClick)
+        }
+    }
+}
+
+@Composable
+private fun AppGridSection(
+    apps: List<InstalledApp>,
+    onAppClick: (InstalledApp) -> Unit
+) {
+    if (apps.isEmpty()) {
+        Text(text = stringResource(id = R.string.empty_results), style = MaterialTheme.typography.bodyMedium)
+        return
+    }
+    Text(
+        text = stringResource(id = R.string.drawer_title),
+        style = MaterialTheme.typography.titleMedium
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = LauncherConfig.homeGridMinHeightDp.dp)
+    ) {
+        AppGrid(
+            apps = apps,
+            onAppClick = onAppClick,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        )
     }
 }
 

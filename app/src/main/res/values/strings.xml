@@ -14,6 +14,7 @@
     <string name="settings_button">設定</string>
     <string name="empty_results">候補なし</string>
     <string name="favorites_title">よく使うアプリ</string>
+    <string name="recents_title">最近使ったアプリ</string>
     <string name="search_results_actions">クイックアクション</string>
     <string name="search_results_apps">アプリ</string>
     <string name="drawer_back">ホームに戻る</string>

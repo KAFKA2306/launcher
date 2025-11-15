@@ -14,6 +14,7 @@ data class LauncherState(
     val installedApps: List<InstalledApp> = emptyList(),
     val filteredApps: List<InstalledApp> = emptyList(),
     val categorizedApps: Map<AppCategory, List<InstalledApp>> = emptyMap(),
+    val recentApps: List<InstalledApp> = emptyList(),
     val favoriteApps: List<InstalledApp> = emptyList(),
     val settings: Settings = Settings(),
     val navigationInfo: NavigationInfo = NavigationInfo(),

@@ -7,6 +7,7 @@ import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.domain.model.ActionLog
 import com.kafka.launcher.domain.model.ActionStats
 import com.kafka.launcher.domain.model.AppCategory
 import com.kafka.launcher.domain.model.AppSort
@@ -31,6 +32,7 @@ class LauncherViewModel(
 ) : ViewModel() {
 
     private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
+    private val recentSnapshot = MutableStateFlow<List<ActionLog>>(emptyList())
     private val _state = MutableStateFlow(LauncherState())
     val state: StateFlow<LauncherState> = _state.asStateFlow()
 
@@ -40,6 +42,7 @@ class LauncherViewModel(
         _state.update { it.copy(navigationInfo = navigationInfo) }
         observeQuickActions()
         observeStats()
+        observeRecentLogs()
         observeSettings()
         loadApps()
         updateFavoriteApps()
@@ -98,6 +101,15 @@ class LauncherViewModel(
         }
     }
 
+    private fun observeRecentLogs() {
+        viewModelScope.launch {
+            actionLogRepository.recent(LauncherConfig.recentLimit).collect { logs ->
+                recentSnapshot.value = logs
+                updateRecentApps()
+            }
+        }
+    }
+
     private fun observeSettings() {
         viewModelScope.launch {
             settingsRepository.settings.collect { settings ->
@@ -112,6 +124,7 @@ class LauncherViewModel(
         viewModelScope.launch {
             val apps = appRepository.loadApps()
             cachedApps = apps
+            updateRecentApps()
             applyFilters()
             updateFavoriteApps()
             _state.update { it.copy(isLoading = false) }
@@ -178,6 +191,25 @@ class LauncherViewModel(
         }
 
         _state.update { it.copy(favoriteApps = resolvedFavorites) }
+    }
+
+    private fun updateRecentApps() {
+        if (cachedApps.isEmpty()) {
+            _state.update { it.copy(recentApps = emptyList()) }
+            return
+        }
+        val appsByPackage = cachedApps.associateBy { it.packageName }
+        val recents = recentSnapshot.value
+            .asSequence()
+            .mapNotNull { log ->
+                if (!log.actionId.startsWith(LauncherConfig.appUsagePrefix)) return@mapNotNull null
+                val packageName = log.actionId.removePrefix(LauncherConfig.appUsagePrefix)
+                appsByPackage[packageName]
+            }
+            .distinctBy { it.packageName }
+            .take(LauncherConfig.recentLimit)
+            .toList()
+        _state.update { it.copy(recentApps = recents) }
     }
 
     private fun appUsageKey(packageName: String) = "${LauncherConfig.appUsagePrefix}$packageName"

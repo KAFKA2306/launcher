@@ -11,9 +11,11 @@ object LauncherConfig {
     const val statsLimit = 50
     const val recommendationFallbackCount = 4
     const val favoritesLimit = 5
+    const val recentLimit = 12
     const val appsPerRow = 8
     const val categoryPreviewLimit = 4
     const val bottomQuickActionLimit = 6
+    const val homeGridMinHeightDp = 320
     const val navigationModeKey = "navigation_mode"
     const val navigationModeGestureValue = 2
     const val navigationModeThreeButtonValue = 0
