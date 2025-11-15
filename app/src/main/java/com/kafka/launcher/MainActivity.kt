@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kafka.launcher.data.local.datastore.settingsDataStore
 import com.kafka.launcher.data.local.db.KafkaDatabase
+import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.data.log.QuickActionAuditLogger
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
@@ -38,6 +39,7 @@ import com.kafka.launcher.ui.theme.KafkaLauncherTheme
 
 class MainActivity : ComponentActivity() {
     private val auditLogger by lazy { QuickActionAuditLogger(applicationContext) }
+    private val actionLogFileWriter by lazy { ActionLogFileWriter(applicationContext) }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -55,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 ),
                 auditLogger
             ),
-            actionLogRepository = ActionLogRepository(database.actionLogDao()),
+            actionLogRepository = ActionLogRepository(database.actionLogDao(), actionLogFileWriter),
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
             recommendActionsUseCase = RecommendActionsUseCase(),
             navigationInfo = navigationInfo

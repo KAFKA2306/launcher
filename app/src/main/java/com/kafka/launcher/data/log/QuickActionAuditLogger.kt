@@ -1,45 +1,58 @@
 package com.kafka.launcher.data.log
 
 import android.content.Context
+import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.domain.model.QuickAction
-import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class QuickActionAuditLogger(context: Context) {
-    private val logDir = File(context.getExternalFilesDir(null), "logs").apply { mkdirs() }
-    private val snapshotFile = File(logDir, "quickactions_snapshot.txt")
-    private val eventsFile = File(logDir, "quickactions_events.txt")
+    private val directory = LogDirectoryWriter(context)
+    private val snapshotFile = directory.resolve(LauncherConfig.quickActionSnapshotFileName)
+    private val eventsFile = directory.resolve(LauncherConfig.quickActionEventsFileName)
     private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun writeSnapshot(actions: List<QuickAction>) {
-        val content = buildString {
-            append("snapshot=")
-            append(timestamp())
-            append('\n')
-            actions.forEach { action ->
-                append(formatAction(action))
+        scope.launch {
+            val content = buildString {
+                append("snapshot=")
+                append(timestamp())
                 append('\n')
+                actions.forEach { action ->
+                    append(formatAction(action))
+                    append('\n')
+                }
+            }
+            directory.write {
+                snapshotFile.writeText(content)
             }
         }
-        snapshotFile.writeText(content)
     }
 
     fun logExecution(action: QuickAction, query: String) {
-        val line = buildString {
-            append(timestamp())
-            append(" | EXECUTE | id=")
-            append(action.id)
-            append(" | provider=")
-            append(action.providerId)
-            append(" | label=")
-            append(action.label)
-            append(" | type=")
-            append(action.actionType.name)
-            append(" | query=")
-            append(query)
+        scope.launch {
+            val line = buildString {
+                append(timestamp())
+                append(" | EXECUTE | id=")
+                append(action.id)
+                append(" | provider=")
+                append(action.providerId)
+                append(" | label=")
+                append(action.label)
+                append(" | type=")
+                append(action.actionType.name)
+                append(" | query=")
+                append(query)
+            }
+            directory.write {
+                eventsFile.appendText(line + "\n")
+            }
         }
-        eventsFile.appendText(line + "\n")
     }
 
     private fun formatAction(action: QuickAction): String = buildString {

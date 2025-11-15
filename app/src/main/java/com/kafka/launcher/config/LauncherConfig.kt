@@ -8,6 +8,14 @@ data class DiscordShortcut(
 )
 
 object LauncherConfig {
+    const val logDirectoryName = "logs"
+    const val logManifestFileName = "logs_manifest.json"
+    const val logPackageFileName = "logs_bundle.zip"
+    const val quickActionSnapshotFileName = "quickactions_snapshot.txt"
+    const val quickActionEventsFileName = "quickactions_events.txt"
+    const val actionLogEventsFileName = "action_events.jsonl"
+    const val actionLogRecentFileName = "action_recent.json"
+    const val actionLogStatsFileName = "action_stats.json"
     const val statsLimit = 50
     const val recommendationFallbackCount = 4
     const val favoritesLimit = 5
