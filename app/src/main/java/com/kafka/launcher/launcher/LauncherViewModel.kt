@@ -1,0 +1,149 @@
+package com.kafka.launcher.launcher
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.kafka.launcher.data.repo.ActionLogRepository
+import com.kafka.launcher.data.repo.AppRepository
+import com.kafka.launcher.data.repo.QuickActionRepository
+import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.domain.model.ActionStats
+import com.kafka.launcher.domain.model.AppSort
+import com.kafka.launcher.domain.model.InstalledApp
+import com.kafka.launcher.domain.model.QuickAction
+import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+class LauncherViewModel(
+    private val appRepository: AppRepository,
+    private val quickActionRepository: QuickActionRepository,
+    private val actionLogRepository: ActionLogRepository,
+    private val settingsRepository: SettingsRepository,
+    private val recommendActionsUseCase: RecommendActionsUseCase
+) : ViewModel() {
+
+    private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
+    private val _state = MutableStateFlow(LauncherState())
+    val state: StateFlow<LauncherState> = _state.asStateFlow()
+
+    private var cachedApps: List<InstalledApp> = emptyList()
+
+    init {
+        observeQuickActions()
+        observeStats()
+        observeSettings()
+        loadApps()
+    }
+
+    fun onSearchQueryChange(query: String) {
+        applyFilters(query)
+    }
+
+    fun clearSearch() {
+        applyFilters("")
+    }
+
+    fun onQuickActionExecuted(actionId: String) {
+        viewModelScope.launch {
+            actionLogRepository.log(actionId)
+        }
+    }
+
+    fun onAppLaunched(packageName: String) {
+        viewModelScope.launch {
+            actionLogRepository.log(appUsageKey(packageName))
+        }
+    }
+
+    fun setShowFavorites(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowFavorites(enabled)
+        }
+    }
+
+    fun setAppSort(sort: AppSort) {
+        viewModelScope.launch {
+            settingsRepository.setAppSort(sort)
+        }
+    }
+
+    private fun observeQuickActions() {
+        viewModelScope.launch {
+            quickActionRepository.observe().collect { actions ->
+                _state.update { it.copy(quickActions = actions) }
+                refreshRecommendations(actions, statsSnapshot.value)
+                applyFilters()
+            }
+        }
+    }
+
+    private fun observeStats() {
+        viewModelScope.launch {
+            actionLogRepository.stats(STATS_LIMIT).collect { stats ->
+                statsSnapshot.value = stats
+                refreshRecommendations(_state.value.quickActions, stats)
+                applyFilters()
+            }
+        }
+    }
+
+    private fun observeSettings() {
+        viewModelScope.launch {
+            settingsRepository.settings.collect { settings ->
+                _state.update { it.copy(settings = settings) }
+                applyFilters()
+            }
+        }
+    }
+
+    private fun loadApps() {
+        viewModelScope.launch {
+            val apps = appRepository.loadApps()
+            cachedApps = apps
+            applyFilters()
+            _state.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private fun refreshRecommendations(actions: List<QuickAction>, stats: List<ActionStats>) {
+        val fallback = if (actions.isEmpty()) emptyList() else actions.take(RECOMMENDATION_FALLBACK_COUNT)
+        val recommendations = recommendActionsUseCase(actions, stats, fallback)
+        _state.update { it.copy(recommendedActions = recommendations) }
+    }
+
+    private fun applyFilters(query: String = _state.value.searchQuery) {
+        val sortedApps = sortApps(cachedApps, _state.value.settings.appSort)
+        val filteredApps = if (query.isBlank()) sortedApps else appRepository.filter(sortedApps, query)
+        val filteredQuickActions = if (query.isBlank()) emptyList() else quickActionRepository.filter(query)
+        _state.update {
+            it.copy(
+                searchQuery = query,
+                installedApps = sortedApps,
+                filteredApps = filteredApps,
+                filteredQuickActions = filteredQuickActions
+            )
+        }
+    }
+
+    private fun sortApps(apps: List<InstalledApp>, sort: AppSort): List<InstalledApp> {
+        if (apps.isEmpty()) return emptyList()
+        val usageMap = statsSnapshot.value.associate { it.actionId to it.count }
+        return when (sort) {
+            AppSort.NAME -> apps.sortedBy { it.label.lowercase() }
+            AppSort.USAGE -> apps.sortedWith(
+                compareByDescending<InstalledApp> { usageMap[appUsageKey(it.packageName)] ?: 0 }
+                    .thenBy { it.label.lowercase() }
+            )
+        }
+    }
+
+    private fun appUsageKey(packageName: String) = "app:$packageName"
+
+    companion object {
+        private const val STATS_LIMIT = 50
+        private const val RECOMMENDATION_FALLBACK_COUNT = 4
+    }
+}

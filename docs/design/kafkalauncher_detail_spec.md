@@ -1,8 +1,3 @@
-仕様書モード、いきます。
-「KafkaLauncher（行動ランチャー）」の**詳細設計仕様書 v0.1**としてまとめます。
-
----
-
 # 0. 全体概要
 
 ## 0.1 目的
@@ -624,61 +619,3 @@ Room / DataStore はローカルストレージにデータを保持し、
 
   * ログはローカルのみ（Backend 送信なし）
   * おすすめは完全にローカルスコアリングのみで生成
-
----
-
-# 7. 非機能要件
-
-## 7.1 パフォーマンス
-
-* ホーム起動：500ms 以内
-* おすすめスロット決定：
-
-  * ローカルスコアリング：100ms 以内
-  * Gemini 連携は非同期（結果が来るまでローカル候補使用）
-* APK サイズ：10MB 以下を目標
-
-Room / DataStore / Compose はモバイル端末での利用を前提に設計されているため、適切なクエリ・Flow 運用で要件を満たせる想定。
-
-## 7.2 バッテリー
-
-* 常駐サービスなし
-* 同期バッチ：
-
-  * 1時間に1回以下
-  * Wi-Fi 時優先
-
----
-
-# 8. 拡張ポイント（将来）
-
-* Discord の通知チャンネル Deep Link 対応（公式 URI / Intent 調査）
-* UsageStatsManager を使った「ランチャー外の行動」も含めた推薦（ユーザー許可が前提）
-* Gemini 2.5 の Structured Output 改良に合わせた複雑スキーマ対応（multi-agent 化など）
-
----
-
-ここまでで、
-
-* Android ランチャーとしての基盤（HOME / RoleManager / Room / DataStore）
-* 行動ログモデルと記録ロジック
-* ローカルのスコアリングと precision モード
-* Gemini 2.5 Preview Structured Output との JSON I/O 仕様
-* UI・データフロー
-* データ保持・プライバシー
-
-をすべて **「既存ドキュメントに沿った形」で** 明示しました。
-
-この仕様をそのまま、
-
-* `docs/design/kafkalauncher_detail_spec.md`
-
-みたいなファイルに貼り込んで、
-次のステップとしては：
-
-* Kotlin data class 群の雛形
-* Room DAO / Database 定義
-* DataStore のキー定義
-* Backend の `/logs/upload`, `/recommendations/get` インターフェース定義
-
-に落としていけば、実装フェーズに入れます。
