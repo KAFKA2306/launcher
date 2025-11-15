@@ -142,7 +142,7 @@ class LauncherViewModel(
         return when (sort) {
             AppSort.NAME -> apps.sortedBy { it.label.lowercase() }
             AppSort.USAGE -> apps.sortedWith(
-                compareByDescending<InstalledApp> { usageMap[appUsageKey(it.packageName)] ?: 0 }
+                compareByDescending<InstalledApp> { usageMap[appUsageKey(it.packageName)] ?: 0L }
                     .thenBy { it.label.lowercase() }
             )
         }
