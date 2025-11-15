@@ -2,6 +2,9 @@
 
 最小構成の Android ランチャー。Jetpack Compose + ViewModel でホーム画面 / アプリドロワー / クイックアクションだけに絞り、設定値と端末依存ロジックは `LauncherConfig` と `NavigationInfoResolver` に集約しています。Xiaomi/Redmi/POCO などジェスチャー強制無効端末では 3 ボタン前提 UI に自動でフォールバックし、ホーム・設定画面で警告カード（`NavigationNotice`）を表示します。
 
+dist:
+https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk
+
 ## 0. ビルドと署名
 
 | コマンド | 用途 |

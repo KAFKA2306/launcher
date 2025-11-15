@@ -198,13 +198,13 @@ private fun AppGridSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = LauncherConfig.homeGridMinHeightDp.dp)
+            .height(LauncherConfig.homeGridMinHeightDp.dp)
     ) {
         AppGrid(
             apps = apps,
             onAppClick = onAppClick,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 8.dp)
         )
     }
 }

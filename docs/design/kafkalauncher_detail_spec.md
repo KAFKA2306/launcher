@@ -175,7 +175,7 @@ enum class AppSort { NAME, USAGE }
 - 下段（常に画面の 60% 以上を占有）：
   - `BottomLauncherPanel` は `Box` で下端に貼り付けた `LazyColumn` とし、`navigationBarsPadding()` を必ず適用して 3 ボタンと重ならないようにする。
   - セクション順序は `SearchBar` → `SearchResults or RecommendedRow` → `RecentAppsRow` → `FavoriteAppsRow` → `QuickActionRow` → `AppGrid` を `item` として並べる。
-  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`heightIn(min = homeGridMinHeight)` を与えて画面の半分を必ず占有させ、グリッド内部のスクロールにすべて委ねる。
+  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`height = homeGridMinHeight` で常に有限高さに収め、グリッド内部のスクロールにすべて委ねる。
   - 見出しとアクションはすべて下段 `LazyColumn` 内で完結させ、二重スクロールを発生させない。
 
 ## 3.2 アプリドロワー
