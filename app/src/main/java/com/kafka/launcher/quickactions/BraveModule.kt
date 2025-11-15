@@ -51,6 +51,24 @@ class BraveModule : QuickActionProvider {
             data = "https://hello.vrchat.com",
             packageName = "com.brave.browser",
             priority = 1
+        ),
+        QuickAction(
+            id = "brave_codex",
+            providerId = id,
+            label = "Codex",
+            actionType = ActionType.BROWSER_URL,
+            data = "https://openai.com/blog/openai-codex",
+            packageName = "com.brave.browser",
+            priority = 1
+        ),
+        QuickAction(
+            id = "brave_github",
+            providerId = id,
+            label = "GitHub",
+            actionType = ActionType.BROWSER_URL,
+            data = "https://github.com/KAFKA2306",
+            packageName = "com.brave.browser",
+            priority = 1
         )
     )
 }
