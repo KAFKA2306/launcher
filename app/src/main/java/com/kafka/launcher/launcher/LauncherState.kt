@@ -11,6 +11,7 @@ data class LauncherState(
     val recommendedActions: List<QuickAction> = emptyList(),
     val installedApps: List<InstalledApp> = emptyList(),
     val filteredApps: List<InstalledApp> = emptyList(),
+    val favoriteApps: List<InstalledApp> = emptyList(),
     val settings: Settings = Settings(),
     val isLoading: Boolean = true
 )

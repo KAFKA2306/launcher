@@ -11,8 +11,6 @@
 ## ビルド・開発コマンド
 - `./gradlew assembleDebug` — デバッグ APK を生成し、実機 / エミュレーター検証に使用。
 - `./gradlew lint` — Lint を走らせ API レベルや未使用リソースを検出。ブロッカーがない状態でレビューへ進めます。
-- `./gradlew testDebugUnitTest` — `app/src/test/java` のビジネスロジック・ユーティリティテストを実行。
-- `./gradlew connectedDebugAndroidTest` — `app/src/androidTest/java` の Compose UI / ナビゲーションテストを接続端末で実行。
 - `./gradlew clean build` — キャッシュをクリアし Debug/Release 両方を再生成。リリース前や CI での信頼できるスナップショットに使います。
 
 ## コーディングスタイルと命名規約

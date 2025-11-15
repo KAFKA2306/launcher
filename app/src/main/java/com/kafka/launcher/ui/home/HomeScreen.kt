@@ -28,6 +28,7 @@ import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.launcher.LauncherState
+import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
 
@@ -80,6 +81,14 @@ fun HomeScreen(
                 actions = state.quickActions,
                 onActionClick = onQuickActionClick
             )
+            if (state.settings.showFavorites && state.favoriteApps.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(32.dp))
+                FavoriteAppsRow(
+                    title = stringResource(id = R.string.favorites_title),
+                    apps = state.favoriteApps,
+                    onAppClick = onAppClick
+                )
+            }
         }
         Spacer(modifier = Modifier.height(32.dp))
         Row(

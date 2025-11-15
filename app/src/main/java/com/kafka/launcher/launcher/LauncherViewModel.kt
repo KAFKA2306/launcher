@@ -36,6 +36,7 @@ class LauncherViewModel(
         observeStats()
         observeSettings()
         loadApps()
+        updateFavoriteApps()
     }
 
     fun onSearchQueryChange(query: String) {
@@ -85,6 +86,7 @@ class LauncherViewModel(
             actionLogRepository.stats(STATS_LIMIT).collect { stats ->
                 statsSnapshot.value = stats
                 refreshRecommendations(_state.value.quickActions, stats)
+                updateFavoriteApps()
                 applyFilters()
             }
         }
@@ -94,6 +96,7 @@ class LauncherViewModel(
         viewModelScope.launch {
             settingsRepository.settings.collect { settings ->
                 _state.update { it.copy(settings = settings) }
+                updateFavoriteApps()
                 applyFilters()
             }
         }
@@ -104,6 +107,7 @@ class LauncherViewModel(
             val apps = appRepository.loadApps()
             cachedApps = apps
             applyFilters()
+            updateFavoriteApps()
             _state.update { it.copy(isLoading = false) }
         }
     }
@@ -140,10 +144,40 @@ class LauncherViewModel(
         }
     }
 
-    private fun appUsageKey(packageName: String) = "app:$packageName"
+    private fun updateFavoriteApps() {
+        val settings = _state.value.settings
+        if (!settings.showFavorites || cachedApps.isEmpty()) {
+            _state.update { it.copy(favoriteApps = emptyList()) }
+            return
+        }
+        val appsByPackage = cachedApps.associateBy { it.packageName }
+        val favorites = statsSnapshot.value
+            .asSequence()
+            .filter { it.actionId.startsWith(APP_USAGE_PREFIX) }
+            .sortedByDescending { it.count }
+            .mapNotNull { stat ->
+                val packageName = stat.actionId.removePrefix(APP_USAGE_PREFIX)
+                appsByPackage[packageName]
+            }
+            .distinctBy { it.packageName }
+            .take(FAVORITES_LIMIT)
+            .toList()
+
+        val resolvedFavorites = if (favorites.isNotEmpty()) {
+            favorites
+        } else {
+            sortApps(cachedApps, AppSort.NAME).take(FAVORITES_LIMIT)
+        }
+
+        _state.update { it.copy(favoriteApps = resolvedFavorites) }
+    }
+
+    private fun appUsageKey(packageName: String) = "$APP_USAGE_PREFIX$packageName"
 
     companion object {
         private const val STATS_LIMIT = 50
         private const val RECOMMENDATION_FALLBACK_COUNT = 4
+        private const val FAVORITES_LIMIT = 5
+        private const val APP_USAGE_PREFIX = "app:"
     }
 }
