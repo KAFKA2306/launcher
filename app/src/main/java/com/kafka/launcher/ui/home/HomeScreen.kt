@@ -12,8 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -21,8 +20,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -112,58 +111,72 @@ private fun BottomLauncherPanel(
     onQuickActionClick: (QuickAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val panelScrollState = rememberScrollState()
     val isSearching = state.searchQuery.isNotBlank()
     Box(
         modifier = modifier
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .verticalScroll(panelScrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize()
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            KafkaSearchBar(
-                value = state.searchQuery,
-                placeholder = stringResource(id = R.string.search_placeholder),
-                onValueChange = onSearchQueryChange,
-                onClear = onClearSearch
-            )
-            if (isSearching) {
-                SearchResults(
-                    actions = state.filteredQuickActions,
-                    apps = state.filteredApps,
-                    onQuickActionClick = onQuickActionClick,
-                    onAppClick = onAppClick
-                )
-            } else {
-                QuickActionRow(
-                    title = stringResource(id = R.string.recommended_title),
-                    actions = state.recommendedActions,
-                    onActionClick = onRecommendedClick
-                )
-                if (state.recentApps.isNotEmpty()) {
-                    FavoriteAppsRow(
-                        title = stringResource(id = R.string.recents_title),
-                        apps = state.recentApps,
-                        onAppClick = onAppClick
-                    )
-                }
-                if (state.settings.showFavorites && state.favoriteApps.isNotEmpty()) {
-                    FavoriteAppsRow(
-                        title = stringResource(id = R.string.favorites_title),
-                        apps = state.favoriteApps,
-                        onAppClick = onAppClick
-                    )
-                }
-                QuickActionRow(
-                    title = stringResource(id = R.string.actions_title),
-                    actions = quickActions,
-                    onActionClick = onQuickActionClick
+            item {
+                KafkaSearchBar(
+                    value = state.searchQuery,
+                    placeholder = stringResource(id = R.string.search_placeholder),
+                    onValueChange = onSearchQueryChange,
+                    onClear = onClearSearch
                 )
             }
-            AppGridSection(apps = state.installedApps, onAppClick = onAppClick)
+            if (isSearching) {
+                item {
+                    SearchResults(
+                        actions = state.filteredQuickActions,
+                        apps = state.filteredApps,
+                        onQuickActionClick = onQuickActionClick,
+                        onAppClick = onAppClick
+                    )
+                }
+            } else {
+                item {
+                    QuickActionRow(
+                        title = stringResource(id = R.string.recommended_title),
+                        actions = state.recommendedActions,
+                        onActionClick = onRecommendedClick
+                    )
+                }
+                if (state.recentApps.isNotEmpty()) {
+                    item {
+                        FavoriteAppsRow(
+                            title = stringResource(id = R.string.recents_title),
+                            apps = state.recentApps,
+                            onAppClick = onAppClick
+                        )
+                    }
+                }
+                if (state.settings.showFavorites && state.favoriteApps.isNotEmpty()) {
+                    item {
+                        FavoriteAppsRow(
+                            title = stringResource(id = R.string.favorites_title),
+                            apps = state.favoriteApps,
+                            onAppClick = onAppClick
+                        )
+                    }
+                }
+                item {
+                    QuickActionRow(
+                        title = stringResource(id = R.string.actions_title),
+                        actions = quickActions,
+                        onActionClick = onQuickActionClick
+                    )
+                }
+            }
+            item {
+                AppGridSection(apps = state.installedApps, onAppClick = onAppClick)
+            }
         }
     }
 }

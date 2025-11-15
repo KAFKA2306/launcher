@@ -173,10 +173,10 @@ enum class AppSort { NAME, USAGE }
   - 左にドロワー（フルスクリーン一覧）ボタン、右に設定ボタンのみを置き、普段触らない要素をここへ追いやる。
   - 3 ボタン専用ナビ注意は上段の下に差し込む。
 - 下段（常に画面の 60% 以上を占有）：
-  - `BottomLauncherPanel` を `Box` で下端に貼り付け、`navigationBarsPadding()` を必ず適用して 3 ボタンと重ならないようにする。
-  - セクション順序は `SearchBar` → `SearchResults or RecommendedRow` → `RecentAppsRow` → `FavoriteAppsRow` → `QuickActionRow` → `AppGrid`.
-  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`heightIn(min = homeGridMinHeight)` を与えて画面の半分を必ず占有し、内部スクロールで全件を辿る。
-  - すべての見出しとアクションを左下基準で揃え、縦方向のスクロールのみで完結させる。
+  - `BottomLauncherPanel` は `Box` で下端に貼り付けた `LazyColumn` とし、`navigationBarsPadding()` を必ず適用して 3 ボタンと重ならないようにする。
+  - セクション順序は `SearchBar` → `SearchResults or RecommendedRow` → `RecentAppsRow` → `FavoriteAppsRow` → `QuickActionRow` → `AppGrid` を `item` として並べる。
+  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`heightIn(min = homeGridMinHeight)` を与えて画面の半分を必ず占有させ、グリッド内部のスクロールにすべて委ねる。
+  - 見出しとアクションはすべて下段 `LazyColumn` 内で完結させ、二重スクロールを発生させない。
 
 ## 3.2 アプリドロワー
 
