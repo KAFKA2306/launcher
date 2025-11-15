@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import com.kafka.launcher.data.log.QuickActionAuditLogger
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.quickactions.QuickActionIntentFactory
 import com.kafka.launcher.quickactions.QuickActionProvider
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 class QuickActionRepository(
     private val context: Context,
-    private val providers: List<QuickActionProvider>
+    private val providers: List<QuickActionProvider>,
+    private val logger: QuickActionAuditLogger
 ) {
     private val quickActions = MutableStateFlow(emptyList<QuickAction>())
     private val intentFactory = QuickActionIntentFactory(context)
@@ -44,10 +46,12 @@ class QuickActionRepository(
     }
 
     private fun refresh() {
-        quickActions.value = providers
+        val actions = providers
             .flatMap { it.actions(context) }
             .filter { isAvailable(it) }
             .sortedByDescending { it.priority }
+        quickActions.value = actions
+        logger.writeSnapshot(actions)
     }
 
     private fun isAvailable(action: QuickAction): Boolean {

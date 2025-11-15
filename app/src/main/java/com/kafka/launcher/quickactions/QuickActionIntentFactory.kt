@@ -33,32 +33,39 @@ class QuickActionIntentFactory(private val context: Context) {
     private fun openUri(base: String?, query: String, packageName: String?): Intent? {
         if (base.isNullOrBlank()) return null
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(base + query)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!packageName.isNullOrBlank()) intent.`package` = packageName
-        return if (intent.resolveActivity(packageManager) != null) intent else null
+        return preferPackage(intent, packageName)
     }
 
     private fun openUrl(url: String, packageName: String?): Intent? {
         if (url.isBlank()) return null
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!packageName.isNullOrBlank()) intent.`package` = packageName
-        return if (intent.resolveActivity(packageManager) != null) intent else null
+        return preferPackage(intent, packageName)
     }
 
     private fun openCalendar(packageName: String?): Intent? {
         val intent = Intent(Intent.ACTION_VIEW).setData(CalendarContract.CONTENT_URI).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!packageName.isNullOrBlank()) intent.`package` = packageName
-        return if (intent.resolveActivity(packageManager) != null) intent else null
+        return preferPackage(intent, packageName)
     }
 
     private fun insertCalendar(packageName: String?): Intent? {
         val intent = Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!packageName.isNullOrBlank()) intent.`package` = packageName
-        return if (intent.resolveActivity(packageManager) != null) intent else null
+        return preferPackage(intent, packageName)
     }
 
     private fun composeEmail(packageName: String?): Intent? {
         val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (!packageName.isNullOrBlank()) intent.`package` = packageName
-        return if (intent.resolveActivity(packageManager) != null) intent else null
+        return preferPackage(intent, packageName)
     }
+
+    private fun preferPackage(intent: Intent, packageName: String?): Intent? {
+        if (packageName.isNullOrBlank()) return intent.takeIf { isResolvable(it) }
+        val targeted = Intent(intent).setPackage(packageName)
+        return when {
+            isResolvable(targeted) -> targeted
+            isResolvable(intent) -> intent
+            else -> null
+        }
+    }
+
+    private fun isResolvable(intent: Intent) = intent.resolveActivity(packageManager) != null
 }

@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kafka.launcher.data.local.datastore.settingsDataStore
 import com.kafka.launcher.data.local.db.KafkaDatabase
+import com.kafka.launcher.data.log.QuickActionAuditLogger
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
@@ -36,6 +37,7 @@ import com.kafka.launcher.quickactions.QuickActionExecutor
 import com.kafka.launcher.ui.theme.KafkaLauncherTheme
 
 class MainActivity : ComponentActivity() {
+    private val auditLogger by lazy { QuickActionAuditLogger(applicationContext) }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -50,7 +52,8 @@ class MainActivity : ComponentActivity() {
                     GmailModule(),
                     DiscordModule(),
                     BraveModule()
-                )
+                ),
+                auditLogger
             ),
             actionLogRepository = ActionLogRepository(database.actionLogDao()),
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
@@ -60,7 +63,7 @@ class MainActivity : ComponentActivity() {
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }
 
-    private val quickActionExecutor by lazy { QuickActionExecutor(this) }
+    private val quickActionExecutor by lazy { QuickActionExecutor(this, auditLogger) }
     private val roleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
