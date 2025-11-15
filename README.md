@@ -132,7 +132,8 @@ Google / Discord / Brave に対して “行動単位” の起動を提供す�
 #### Discord
 
 * Discordアプリ起動
-* 「直近通知のチャンネル」へジャンプ（※v1はアプリ起動のみ）
+* Discord DM一覧へジャンプ（`https://discord.com/channels/@me`）
+* Discord Testers #faq へ直接遷移（`https://discord.com/channels/81384788765712384/82027497244617984`）
 
 #### Brave
 
@@ -174,6 +175,8 @@ Google / Discord / Brave に対して “行動単位” の起動を提供す�
 * クイックアクション表示順
   （Google / Discord / Brave の順番変更）
 * デフォルトホームアプリ設定誘導（RoleManager）: 設定画面下部の「デフォルトホームに設定」ボタンから即時リクエスト
+
+`LauncherConfig.discordShortcuts` にチャネルID（ギルドID/チャンネルID）を追加すると、任意のDiscordサーバー/DMへのショートカットを即座に配信できる。
 
 ---
 
