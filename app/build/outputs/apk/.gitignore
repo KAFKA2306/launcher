@@ -1,0 +1,4 @@
+# Ignore all generated files in this folder except APK artifacts so release builds can be versioned.
+*
+!.gitignore
+!**/*.apk

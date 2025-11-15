@@ -1,20 +1,26 @@
+# Allow shipping artifacts from app/build/outputs/apk while ignoring other generated files.
+
+# OS / Editor
 .DS_Store
 Thumbs.db
-
-*.webp
-
 .idea/
 .vscode/
 *.iml
 *.ipr
 *.iws
 
+# Binary assets
+*.webp
+
+# Gradle / local config
 .gradle/
 **/.gradle/
 local.properties
 gradle-app.setting
 gradle-app.iml
+key.properties
 
+# Build artifacts
 **/build/
 .cxx/
 **/.cxx/
@@ -25,7 +31,7 @@ captures/
 outputs/
 **/outputs/
 app/release/
-
+*html
 *.apk
 *.ap_
 *.aab
@@ -43,4 +49,12 @@ app/release/
 *.swo
 *.keystore
 *.jks
-key.properties
+
+# Re-include only release APK payloads
+!app/build/
+app/build/*
+!app/build/outputs/
+app/build/outputs/*
+!app/build/outputs/apk/
+!app/build/outputs/apk/**/
+!app/build/outputs/apk/**/*.apk

@@ -24,6 +24,7 @@
 - WIP を複数積む場合はローカルで squash、PR では目的・実装要約・テスト結果（実行コマンド、スクリーンショット、動画）を箇条書きで添付します。
 - UI 変更やテーマ更新時は Before/After を PR 説明に貼り、影響範囲（端末/向き/フォームファクタ）を列挙します。
 - Issue 連携は `Fixes #ID`/`Refs #ID` を本文最後に記載し、レビュアーを `launcher`, `data` など担当領域に応じてアサインします。
+- app/build/outputs/apk/**/*.apkだけはcommitで管理する。
 
 ## セキュリティと設定 Tips
 - API キーや署名ファイルは `local.properties` や `~/.gradle/gradle.properties` に置く。
