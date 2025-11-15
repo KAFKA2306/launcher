@@ -2,6 +2,7 @@ package com.kafka.launcher.launcher
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
@@ -9,6 +10,7 @@ import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.domain.model.ActionStats
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
+import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +24,8 @@ class LauncherViewModel(
     private val quickActionRepository: QuickActionRepository,
     private val actionLogRepository: ActionLogRepository,
     private val settingsRepository: SettingsRepository,
-    private val recommendActionsUseCase: RecommendActionsUseCase
+    private val recommendActionsUseCase: RecommendActionsUseCase,
+    private val navigationInfo: NavigationInfo
 ) : ViewModel() {
 
     private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
@@ -32,6 +35,7 @@ class LauncherViewModel(
     private var cachedApps: List<InstalledApp> = emptyList()
 
     init {
+        _state.update { it.copy(navigationInfo = navigationInfo) }
         observeQuickActions()
         observeStats()
         observeSettings()
@@ -83,7 +87,7 @@ class LauncherViewModel(
 
     private fun observeStats() {
         viewModelScope.launch {
-            actionLogRepository.stats(STATS_LIMIT).collect { stats ->
+            actionLogRepository.stats(LauncherConfig.statsLimit).collect { stats ->
                 statsSnapshot.value = stats
                 refreshRecommendations(_state.value.quickActions, stats)
                 updateFavoriteApps()
@@ -113,7 +117,7 @@ class LauncherViewModel(
     }
 
     private fun refreshRecommendations(actions: List<QuickAction>, stats: List<ActionStats>) {
-        val fallback = if (actions.isEmpty()) emptyList() else actions.take(RECOMMENDATION_FALLBACK_COUNT)
+        val fallback = if (actions.isEmpty()) emptyList() else actions.take(LauncherConfig.recommendationFallbackCount)
         val recommendations = recommendActionsUseCase(actions, stats, fallback)
         _state.update { it.copy(recommendedActions = recommendations) }
     }
@@ -153,31 +157,24 @@ class LauncherViewModel(
         val appsByPackage = cachedApps.associateBy { it.packageName }
         val favorites = statsSnapshot.value
             .asSequence()
-            .filter { it.actionId.startsWith(APP_USAGE_PREFIX) }
+            .filter { it.actionId.startsWith(LauncherConfig.appUsagePrefix) }
             .sortedByDescending { it.count }
             .mapNotNull { stat ->
-                val packageName = stat.actionId.removePrefix(APP_USAGE_PREFIX)
+                val packageName = stat.actionId.removePrefix(LauncherConfig.appUsagePrefix)
                 appsByPackage[packageName]
             }
             .distinctBy { it.packageName }
-            .take(FAVORITES_LIMIT)
+            .take(LauncherConfig.favoritesLimit)
             .toList()
 
         val resolvedFavorites = if (favorites.isNotEmpty()) {
             favorites
         } else {
-            sortApps(cachedApps, AppSort.NAME).take(FAVORITES_LIMIT)
+            sortApps(cachedApps, AppSort.NAME).take(LauncherConfig.favoritesLimit)
         }
 
         _state.update { it.copy(favoriteApps = resolvedFavorites) }
     }
 
-    private fun appUsageKey(packageName: String) = "$APP_USAGE_PREFIX$packageName"
-
-    companion object {
-        private const val STATS_LIMIT = 50
-        private const val RECOMMENDATION_FALLBACK_COUNT = 4
-        private const val FAVORITES_LIMIT = 5
-        private const val APP_USAGE_PREFIX = "app:"
-    }
+    private fun appUsageKey(packageName: String) = "${LauncherConfig.appUsagePrefix}$packageName"
 }

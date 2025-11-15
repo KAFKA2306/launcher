@@ -110,7 +110,7 @@ AdLessTwitter と同じキーストアを使うことで証明書フィンガー
 ## 1.3 クイックアクション
 
 **QuickActionProvider** を通じて
-Google / Discord / Brave に対して “行動単位” の起動を提供する。
+Google / Discord / Brave に対して “行動単位” の起動を提供する。端末に対象アプリが存在しないアクションは QuickActionRepository がリアルタイムに除外し、パッケージ追加/削除のブロードキャストを受けて即時同期する。
 
 ### 必須アクション（v1.0）
 

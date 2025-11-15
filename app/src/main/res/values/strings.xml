@@ -19,4 +19,7 @@
     <string name="drawer_back">ホームに戻る</string>
     <string name="request_home_role">デフォルトホームに設定</string>
     <string name="request_home_role_description">通常のホームジェスチャーで戻るために、KafkaLauncher をホームアプリとして設定します</string>
+    <string name="navigation_notice_title">システムのナビゲーション</string>
+    <string name="navigation_notice_body_restricted">%1$s 端末ではシステムによりジェスチャーナビゲーションが無効化され、戻る/ホーム/タスクキーの3ボタン操作のみ利用できます。</string>
+    <string name="navigation_notice_body_three_button">現在は3ボタンナビゲーションが有効です。画面下部の戻る/ホーム/タスクキーを利用してください。</string>
 </resources>

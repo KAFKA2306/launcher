@@ -272,6 +272,8 @@ DataStore は SharedPreferences の代替として非同期・トランザクシ
 * 各 `QuickActionProvider` から QuickAction を収集
 * `UserQuickActionConfig` を読み込んで QuickAction を生成
 * `hiddenIds` を除外
+* `QuickActionIntentFactory` で Intent を構築し、未インストールの依存アプリを参照する行動は一覧から排除
+* `PACKAGE_ADDED/REMOVED/CHANGED` ブロードキャストで即時リロード
 
 ### 2.4.3 ActionLogRepository
 

@@ -18,6 +18,7 @@ import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.data.system.NavigationInfoResolver
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
+        val navigationInfo = NavigationInfoResolver(appContext).resolve()
         val factory = LauncherViewModelFactory(
             appRepository = AppRepository(appContext),
             quickActionRepository = QuickActionRepository(
@@ -52,7 +54,8 @@ class MainActivity : ComponentActivity() {
             ),
             actionLogRepository = ActionLogRepository(database.actionLogDao()),
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
-            recommendActionsUseCase = RecommendActionsUseCase()
+            recommendActionsUseCase = RecommendActionsUseCase(),
+            navigationInfo = navigationInfo
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }

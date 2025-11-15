@@ -45,6 +45,7 @@ fun LauncherNavHost(
                 onQuickActionClick = onQuickActionClick,
                 onRecommendedClick = onRecommendedClick,
                 onAppClick = onAppClick,
+                navigationInfo = state.navigationInfo,
                 onOpenDrawer = { navController.navigate(LauncherDestinations.DRAWER) },
                 onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) }
             )
@@ -61,6 +62,7 @@ fun LauncherNavHost(
         composable(LauncherDestinations.SETTINGS) {
             SettingsScreen(
                 settings = state.settings,
+                navigationInfo = state.navigationInfo,
                 onToggleFavorites = onToggleFavorites,
                 onSortSelected = onSortSelected,
                 onBack = { navController.popBackStack() },

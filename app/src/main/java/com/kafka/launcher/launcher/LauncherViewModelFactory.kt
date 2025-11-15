@@ -6,6 +6,7 @@ import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
 
 class LauncherViewModelFactory(
@@ -13,7 +14,8 @@ class LauncherViewModelFactory(
     private val quickActionRepository: QuickActionRepository,
     private val actionLogRepository: ActionLogRepository,
     private val settingsRepository: SettingsRepository,
-    private val recommendActionsUseCase: RecommendActionsUseCase
+    private val recommendActionsUseCase: RecommendActionsUseCase,
+    private val navigationInfo: NavigationInfo
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -24,7 +26,8 @@ class LauncherViewModelFactory(
                 quickActionRepository = quickActionRepository,
                 actionLogRepository = actionLogRepository,
                 settingsRepository = settingsRepository,
-                recommendActionsUseCase = recommendActionsUseCase
+                recommendActionsUseCase = recommendActionsUseCase,
+                navigationInfo = navigationInfo
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

@@ -25,12 +25,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.InstalledApp
+import com.kafka.launcher.domain.model.NavigationInfo
+import com.kafka.launcher.domain.model.NavigationMode
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.launcher.LauncherState
 import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
 import com.kafka.launcher.ui.components.LauncherIcons
+import com.kafka.launcher.ui.components.NavigationNotice
 
 @Composable
 fun HomeScreen(
@@ -40,6 +43,7 @@ fun HomeScreen(
     onQuickActionClick: (QuickAction) -> Unit,
     onRecommendedClick: (QuickAction) -> Unit,
     onAppClick: (InstalledApp) -> Unit,
+    navigationInfo: NavigationInfo,
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -90,7 +94,13 @@ fun HomeScreen(
                 )
             }
         }
-        Spacer(modifier = Modifier.height(32.dp))
+        if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
+            Spacer(modifier = Modifier.height(24.dp))
+            NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(24.dp))
+        } else {
+            Spacer(modifier = Modifier.height(32.dp))
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

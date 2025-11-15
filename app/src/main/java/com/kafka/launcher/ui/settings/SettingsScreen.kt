@@ -3,9 +3,11 @@ package com.kafka.launcher.ui.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -24,12 +26,16 @@ import androidx.compose.ui.unit.dp
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.Settings
+import com.kafka.launcher.domain.model.NavigationInfo
+import com.kafka.launcher.domain.model.NavigationMode
 import com.kafka.launcher.ui.components.LauncherIcons
+import com.kafka.launcher.ui.components.NavigationNotice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     settings: Settings,
+    navigationInfo: NavigationInfo,
     onToggleFavorites: (Boolean) -> Unit,
     onSortSelected: (AppSort) -> Unit,
     onBack: () -> Unit,
@@ -55,6 +61,10 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
+                NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
