@@ -17,4 +17,6 @@
     <string name="search_results_actions">クイックアクション</string>
     <string name="search_results_apps">アプリ</string>
     <string name="drawer_back">ホームに戻る</string>
+    <string name="request_home_role">デフォルトホームに設定</string>
+    <string name="request_home_role_description">通常のホームジェスチャーで戻るために、KafkaLauncher をホームアプリとして設定します</string>
 </resources>

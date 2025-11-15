@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-エラーハンドリング禁止。コメント禁止。最小のコードで機能を実現。Rootにファイル作成禁止。テスト禁止。一時ファイル禁止。ベストプラクティスに倣う。公式ドキュメントに従う。DRYの原則必須。ハードコーディング禁止。設定値はすべてConfigで一元管理。lintで不要な関数の特性と削除など常に実施。各階層にREADME.md設置し、常に更新。buildなどのコマンドを明記。モックアップ禁止。
+エラーハンドリング禁止。コメント禁止。最小のコードで機能を実現。Rootにファイル作成禁止。テスト禁止。一時ファイル禁止。ベストプラクティスに倣う。公式ドキュメントに従う。DRYの原則必須。ハードコーディング禁止。設定値はすべてConfigで一元管理。lintで不要な関数の特性と削除など常に実施。各階層にREADME.md設置し、常に更新。buildなどのコマンドを明記。モックアップ禁止。返信は日本語。
 
 ## プロジェクト構成とモジュール配置
 - Android 本体コードは `app/src/main/java/com/kafka/launcher` に集約し、`launcher` (画面状態・NavHost)、`data` (Repository/DB/DataStore)、`domain` (model/usecase)、`quickactions` (Google/Discord/Brave 連携) の層で依存方向を一定に保ちます。

@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -21,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +30,7 @@ import com.kafka.launcher.launcher.LauncherState
 import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
+import com.kafka.launcher.ui.components.LauncherIcons
 
 @Composable
 fun HomeScreen(
@@ -97,7 +97,7 @@ fun HomeScreen(
         ) {
             Button(onClick = onOpenDrawer, modifier = Modifier.weight(1f)) {
                 Icon(
-                    imageVector = Icons.Default.ExpandLess,
+                    painter = painterResource(id = LauncherIcons.Drawer),
                     contentDescription = stringResource(id = R.string.drawer_button)
                 )
                 Spacer(modifier = Modifier.size(8.dp))

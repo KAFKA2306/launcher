@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        ensureHomeRole()
+        requestHomeRole()
         setContent {
             val state by launcherViewModel.state.collectAsStateWithLifecycle()
             KafkaLauncherApp(
@@ -74,7 +74,8 @@ class MainActivity : ComponentActivity() {
                 onRecommendedClick = { action -> handleQuickAction(action, state.searchQuery) },
                 onAppClick = { app -> openInstalledApp(app) },
                 onToggleFavorites = launcherViewModel::setShowFavorites,
-                onSortSelected = launcherViewModel::setAppSort
+                onSortSelected = launcherViewModel::setAppSort,
+                onRequestHomeRole = ::requestHomeRole
             )
         }
     }
@@ -94,7 +95,7 @@ class MainActivity : ComponentActivity() {
         launcherViewModel.onAppLaunched(app.packageName)
     }
 
-    private fun ensureHomeRole() {
+    private fun requestHomeRole() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
         val roleManager = getSystemService(RoleManager::class.java) ?: return
         if (!roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) return
@@ -112,7 +113,8 @@ private fun KafkaLauncherApp(
     onRecommendedClick: (QuickAction) -> Unit,
     onAppClick: (InstalledApp) -> Unit,
     onToggleFavorites: (Boolean) -> Unit,
-    onSortSelected: (AppSort) -> Unit
+    onSortSelected: (AppSort) -> Unit,
+    onRequestHomeRole: () -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -123,7 +125,8 @@ private fun KafkaLauncherApp(
             onRecommendedClick = onRecommendedClick,
             onAppClick = onAppClick,
             onToggleFavorites = onToggleFavorites,
-            onSortSelected = onSortSelected
+            onSortSelected = onSortSelected,
+            onRequestHomeRole = onRequestHomeRole
         )
     }
 }

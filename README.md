@@ -170,7 +170,7 @@ Google / Discord / Brave に対して “行動単位” の起動を提供す�
 * よく使うアプリ表示（On/Off）
 * クイックアクション表示順
   （Google / Discord / Brave の順番変更）
-* デフォルトホームアプリ設定誘導（RoleManager）
+* デフォルトホームアプリ設定誘導（RoleManager）: 設定画面下部の「デフォルトホームに設定」ボタンから即時リクエスト
 
 ---
 

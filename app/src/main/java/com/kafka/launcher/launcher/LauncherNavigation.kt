@@ -28,6 +28,7 @@ fun LauncherNavHost(
     onAppClick: (InstalledApp) -> Unit,
     onToggleFavorites: (Boolean) -> Unit,
     onSortSelected: (AppSort) -> Unit,
+    onRequestHomeRole: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -62,7 +63,8 @@ fun LauncherNavHost(
                 settings = state.settings,
                 onToggleFavorites = onToggleFavorites,
                 onSortSelected = onSortSelected,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onRequestHomeRole = onRequestHomeRole
             )
         }
     }
