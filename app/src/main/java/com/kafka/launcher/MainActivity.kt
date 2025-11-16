@@ -13,6 +13,8 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.kafka.launcher.data.local.datastore.settingsDataStore
 import com.kafka.launcher.data.local.db.KafkaDatabase
 import com.kafka.launcher.data.log.ActionLogFileWriter
@@ -30,6 +32,9 @@ import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
+import com.kafka.launcher.launcher.AiSyncStageKey
+import com.kafka.launcher.launcher.AiSyncStatus
+import com.kafka.launcher.config.GeminiConfig
 import com.kafka.launcher.launcher.LauncherNavHost
 import com.kafka.launcher.launcher.LauncherState
 import com.kafka.launcher.launcher.LauncherViewModel
@@ -85,11 +90,14 @@ class MainActivity : ComponentActivity() {
     }
     private val roleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
+    private val workManager by lazy { WorkManager.getInstance(applicationContext) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         requestHomeRole()
         GeminiWorkScheduler.schedule(applicationContext)
+        observeGeminiWork()
         setContent {
             val state by launcherViewModel.state.collectAsStateWithLifecycle()
             KafkaLauncherApp(
@@ -148,6 +156,35 @@ class MainActivity : ComponentActivity() {
         if (!roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) return
         if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) return
         roleLauncher.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+    }
+
+    private fun observeGeminiWork() {
+        workManager
+            .getWorkInfosForUniqueWorkLiveData(GeminiConfig.manualWorkName)
+            .observe(this) { infos ->
+                val info = infos.firstOrNull() ?: return@observe
+                val stage = info.progress.getString(AiSyncStageKey)
+                    ?: info.outputData.getString(AiSyncStageKey)
+                when (info.state) {
+                    WorkInfo.State.ENQUEUED -> {
+                        launcherViewModel.onAiSyncStageChanged(AiSyncStatus.Enqueued, "")
+                    }
+                    WorkInfo.State.RUNNING -> {
+                        val status = AiSyncStatus.fromStageId(stage) ?: AiSyncStatus.Running
+                        val targetStatus = if (status == AiSyncStatus.UpdatingCatalog) AiSyncStatus.UpdatingCatalog else AiSyncStatus.Running
+                        launcherViewModel.onAiSyncStageChanged(targetStatus, "")
+                    }
+                    WorkInfo.State.SUCCEEDED -> {
+                        launcherViewModel.onAiSyncStageChanged(AiSyncStatus.Succeeded, "")
+                    }
+                    WorkInfo.State.FAILED,
+                    WorkInfo.State.CANCELLED -> {
+                        val status = AiSyncStatus.fromStageId(stage) ?: AiSyncStatus.Failed
+                        launcherViewModel.onAiSyncStageChanged(status, stage ?: "")
+                    }
+                    else -> {}
+                }
+            }
     }
 }
 

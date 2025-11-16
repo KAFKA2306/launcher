@@ -60,7 +60,11 @@
     <string name="ai_last_updated">最終更新: %1$s</string>
     <string name="ai_last_updated_never">最終更新: 未取得</string>
     <string name="ai_sync_now">今すぐ更新</string>
-    <string name="ai_syncing">更新中...</string>
+    <string name="ai_sync_status_enqueued">同期待ちキューに登録しました</string>
+    <string name="ai_sync_status_running">Geminiと通信中です...</string>
+    <string name="ai_sync_status_updating">ローカルカタログを更新中です...</string>
+    <string name="ai_sync_status_succeeded">同期が完了しました</string>
+    <string name="ai_sync_status_failed">同期に失敗しました</string>
     <string name="ai_usage_count">実行 %1$d 回</string>
     <string name="ai_time_window_label">対象時間: %1$s</string>
 </resources>

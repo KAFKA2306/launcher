@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.kafka.launcher.R
 import com.kafka.launcher.launcher.AiActionUiModel
 import com.kafka.launcher.launcher.AiCenterState
+import com.kafka.launcher.launcher.AiSyncStatus
 import com.kafka.launcher.ui.components.LauncherIcons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,15 +71,7 @@ fun AiScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = lastUpdatedLabel(state), style = MaterialTheme.typography.bodyMedium)
-                    if (state.isSyncing) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = stringResource(id = R.string.ai_syncing), style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+                SyncHeader(state = state)
             }
             item {
                 AiSection(
@@ -109,6 +102,61 @@ fun AiScreen(
                     onSecondary = null,
                     secondaryLabel = null
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SyncHeader(state: AiCenterState) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = lastUpdatedLabel(state),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        when (state.syncStatus) {
+            AiSyncStatus.Idle -> {}
+            AiSyncStatus.Enqueued -> {
+                Text(
+                    text = stringResource(id = R.string.ai_sync_status_enqueued),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            AiSyncStatus.Running -> {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(id = R.string.ai_sync_status_running),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            AiSyncStatus.UpdatingCatalog -> {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(id = R.string.ai_sync_status_updating),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            AiSyncStatus.Succeeded -> {
+                Text(
+                    text = stringResource(id = R.string.ai_sync_status_succeeded),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            AiSyncStatus.Failed -> {
+                Text(
+                    text = stringResource(id = R.string.ai_sync_status_failed),
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (state.lastError.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = state.lastError,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }

@@ -6,6 +6,25 @@ import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.domain.model.Settings
 
+const val AiSyncStageKey = "stage"
+
+enum class AiSyncStatus(val stageId: String?) {
+    Idle(null),
+    Enqueued(null),
+    Running("running"),
+    UpdatingCatalog("updatingCatalog"),
+    Succeeded("succeeded"),
+    Failed("failed");
+
+    companion object {
+        private val byStageId = values()
+            .mapNotNull { status -> status.stageId?.let { it to status } }
+            .toMap()
+
+        fun fromStageId(stageId: String?) = byStageId[stageId]
+    }
+}
+
 data class LauncherState(
     val searchQuery: String = "",
     val quickActions: List<QuickAction> = emptyList(),
@@ -52,7 +71,8 @@ data class AiCenterState(
     val candidates: List<AiActionUiModel> = emptyList(),
     val adopted: List<AiActionUiModel> = emptyList(),
     val hidden: List<AiActionUiModel> = emptyList(),
-    val isSyncing: Boolean = false
+    val syncStatus: AiSyncStatus = AiSyncStatus.Idle,
+    val lastError: String = ""
 )
 
 data class AiActionUiModel(

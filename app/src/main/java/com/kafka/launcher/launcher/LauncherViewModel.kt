@@ -159,7 +159,24 @@ class LauncherViewModel(
     }
 
     fun onAiSyncRequested() {
-        _state.update { it.copy(aiCenter = it.aiCenter.copy(isSyncing = true)) }
+        _state.update {
+            it.copy(
+                aiCenter = it.aiCenter.copy(
+                    syncStatus = AiSyncStatus.Enqueued
+                )
+            )
+        }
+    }
+
+    fun onAiSyncStageChanged(status: AiSyncStatus, error: String) {
+        _state.update {
+            it.copy(
+                aiCenter = it.aiCenter.copy(
+                    syncStatus = status,
+                    lastError = if (status == AiSyncStatus.Failed) error else it.aiCenter.lastError
+                )
+            )
+        }
     }
 
     private fun observeQuickActions() {
@@ -451,7 +468,6 @@ class LauncherViewModel(
 
     private fun updateAiCenterState(catalog: QuickActionCatalog) {
         val previous = _state.value.aiCenter
-        val syncing = if (previous.isSyncing && catalog.updatedAt.isNotBlank() && catalog.updatedAt != previous.lastUpdated) false else previous.isSyncing
         val candidates = catalog.entries
             .asSequence()
             .filter { it.dismissedCount == 0L && it.acceptedCount == 0L }
@@ -469,12 +485,11 @@ class LauncherViewModel(
             .toList()
         _state.update {
             it.copy(
-                aiCenter = AiCenterState(
+                aiCenter = previous.copy(
                     lastUpdated = catalog.updatedAt,
                     candidates = candidates,
                     adopted = adopted,
-                    hidden = hidden,
-                    isSyncing = syncing
+                    hidden = hidden
                 )
             )
         }
