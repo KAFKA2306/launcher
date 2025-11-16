@@ -58,4 +58,7 @@ app/build/*
 app/build/outputs/*
 !app/build/outputs/apk/
 !app/build/outputs/apk/**/
+app/build/outputs/apk/**/baselineProfiles/
+app/build/outputs/apk/**/output-metadata.json
+app/build/outputs/apk/**/*.dm
 !app/build/outputs/apk/**/*.apk
