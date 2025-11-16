@@ -14,6 +14,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 | `./gradlew clean build` | Debug/Release 両方を再生成し、CI やリリース前スナップショットを取得 |
 | `./gradlew assembleRelease` | `app/build/outputs/apk/release/app-release.apk` を生成。`apksigner verify` で署名確認後に配布 |
 
+署名鍵を共有していないためリポジトリにはデバッグ APK のみを含め、署名前の `app-release-unsigned.apk` は削除した。Release 版は各自の keystore を使ってローカルで生成し、配布前に `apksigner verify` を通す。
+
 署名キーストアは `local.properties` で `launcherRelease*` エントリを指定して Gradle へ渡します。
 
 ## 1. 画面と機能

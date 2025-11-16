@@ -12,6 +12,7 @@ Thumbs.db
 # Binary assets
 *.webp
 *.png
+app/build/outputs/apk/**/app-release-unsigned.apk
 
 # Gradle / local config
 .gradle/
