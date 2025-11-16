@@ -19,7 +19,6 @@ object LauncherConfig {
     const val actionLogRecentFileName = "action_recent.json"
     const val actionLogStatsFileName = "action_stats.json"
     const val statsLimit = 50
-    const val recommendationFallbackCount = 4
     const val favoritesLimit = 5
     const val recentLimit = 12
     const val appsPerRow = 8
@@ -30,7 +29,7 @@ object LauncherConfig {
     const val navigationModeGestureValue = 2
     const val navigationModeThreeButtonValue = 0
     const val pinnedAppsKey = "pinned_apps"
-    val gestureUnsupportedManufacturers = setOf("xiaomi", "redmi", "poco", "blackshark")
+    val gestureUnsupportedManufacturers = setOf("xiaomi")
     const val appUsagePrefix = "app:"
     val defaultAppSort = AppSort.USAGE
     const val discordPackageName = "com.discord"

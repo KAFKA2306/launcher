@@ -1,6 +1,6 @@
 # KafkaLauncher
 
-最小構成の Android ランチャー。Jetpack Compose + ViewModel でホーム画面 / アプリドロワー / クイックアクションだけに絞り、設定値と端末依存ロジックは `LauncherConfig` と `NavigationInfoResolver` に集約しています。Xiaomi/Redmi/POCO などジェスチャー強制無効端末では 3 ボタン前提 UI に自動でフォールバックし、ホーム・設定画面で警告カード（`NavigationNotice`）を表示します。
+最小構成の Android ランチャー。Jetpack Compose + ViewModel でホーム画面 / アプリドロワー / クイックアクションだけに絞り、設定値と端末依存ロジックは `LauncherConfig` と `NavigationInfoResolver` に集約しています。Xiaomi 端末では 3 ボタン前提 UI に自動でフォールバックし、ホーム・設定画面で警告カード（`NavigationNotice`）を表示します。
 
 dist:
 https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk
@@ -22,7 +22,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
-- DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、空き枠は `ActionLogRepository` の `stats` に基づく使用頻度上位で補います。
+- DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、`ActionLogRepository` の `stats` に基づく使用頻度上位を組み合わせます。
 - 最下段でアプリドロワー / 設定ボタンを配置。NavigationInfo が 3 ボタン判定なら `NavigationNotice` をクッションとして表示。
 
 ### 1.2 アプリドロワー
@@ -48,7 +48,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 | DiscordModule | Discord アプリ起動に加えて `LauncherConfig.discordShortcuts` の Deep Link（既定では DM 一覧、Discord Testers #faq） |
 | BraveModule | Brave 起動、Brave検索、固定 URL（X / Perplexity / VRChat） |
 
-`QuickActionIntentFactory` はパッケージ指定 Intent が解決できなかった場合に一般ブラウザ Intent を fallback するため、Discord Deep Link も UI から隠れません。
+`QuickActionIntentFactory` は指定パッケージで解決可能な Intent のみを返し、解決できない組み合わせは UI 上からも除外されます。
 
 ### 1.5 ログ出力（Gemini 連携 / 行動追跡）
 
@@ -92,7 +92,7 @@ app/src/main/java/com/kafka/launcher
 ```
 
 - `LauncherViewModel` が AppRepository/QuickActionRepository/SettingsRepository/ActionLogRepository を監視し、`LauncherState` に統合。
-- `RecommendActionsUseCase` は `ActionStats` と QuickAction 一覧からおすすめを抽出。統計が空なら fallback で単純上位を返す。
+- `RecommendActionsUseCase` は `ActionStats` と QuickAction 一覧から一致する ID だけを抽出し、使用履歴が存在しない場合は空配列となる。
 - `NavigationInfoResolver` が `Settings.Secure.navigation_mode` と OEM 名でジェスチャー可否を判定。
 - `LauncherConfig` は推奨アイテム数や Discord Deep Link を集中管理。
 

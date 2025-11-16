@@ -57,7 +57,7 @@
 
 1. **端末/OEM 検知 → 挙動分岐**
 
-   * `NavigationInfoResolver` で `Settings.Secure.NAVIGATION_MODE` を参照し、かつ `Xiaomi/Redmi/POCO/BlackShark` など制限 OEM をリスト管理。どちらかで 3 ボタンであると判定した場合は **3ボタン前提レイアウト**へ自動フォールバック（ヒント・導線の最適化、タップ到達距離の短縮など）。
+   * `NavigationInfoResolver` で `Settings.Secure.NAVIGATION_MODE` を参照し、かつ Xiaomi 端末をリスト管理。どちらかで 3 ボタンであると判定した場合は **3ボタン前提レイアウト**へ自動フォールバック（ヒント・導線の最適化、タップ到達距離の短縮など）。
    * AOSP 系は**ジェスチャー前提 UI**をデフォルト有効。
 2. **ユーザー向け表示**
 
@@ -102,4 +102,4 @@
 
 * `LauncherConfig` にナビ検知や統計関連の定数を集約し、ViewModel から参照。
 * `NavigationInfo` と `NavigationInfoResolver` で OEM/モードを 1 箇所に集約し、`LauncherState` へ保持。
-* `NavigationNotice` により Xiaomi 等で戻れない課題を UI 上で即時告知し、操作手がかりを提供する。
+* `NavigationNotice` により Xiaomi 端末で戻れない課題を UI 上で即時告知し、操作手がかりを提供する。

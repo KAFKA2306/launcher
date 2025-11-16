@@ -15,6 +15,6 @@ abstract class KafkaDatabase : RoomDatabase() {
             context.applicationContext,
             KafkaDatabase::class.java,
             "kafka_launcher.db"
-        ).fallbackToDestructiveMigration().build()
+        ).build()
     }
 }

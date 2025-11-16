@@ -198,7 +198,7 @@ enum class AppSort { NAME, USAGE }
 
 - `LauncherConfig.favoritesLimit` をホーム下段での「よく使う」枠数に使う。
 - `LauncherConfig.recentLimit` を使い `ActionLogRepository.recent` の結果から最近起動アプリを抽出し、`FavoriteAppsRow` を流用して表示する。
-- よく使う列には長押しで登録したアプリを優先し、不足分を使用統計で補完する。
+- よく使う列には長押しで登録したアプリを優先し、残り枠は使用統計の上位で埋める。
 - 検索やレコメンドと同じく、この領域も `BottomLauncherPanel` 内で下寄せ配置し、スクロールせずとも 3〜5 件は常に見えるよう `Spacer` を抑制する。
 
 ---
@@ -221,7 +221,6 @@ enum class AppSort { NAME, USAGE }
 | Key | 役割 |
 | --- | --- |
 | `statsLimit` | `ActionLogRepository.stats` の取得件数 |
-| `recommendationFallbackCount` | レコメンドのフォールバック数 |
 | `favoritesLimit` | ホームで表示する「よく使う」最大件数 |
 | `recentLimit` | 最近起動アプリの抽出件数 |
 | `appsPerRow` | ホーム/ドロワー共通のグリッド列数（固定 8）|
