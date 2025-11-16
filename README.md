@@ -22,13 +22,13 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
-- DataStore で保持する `showFavorites` が有効かつ統計が取れていれば `FavoriteAppsRow` を表示。`ActionLogRepository` の `stats` で得た上位 5 アプリを並べます。
+- DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、空き枠は `ActionLogRepository` の `stats` に基づく使用頻度上位で補います。
 - 最下段でアプリドロワー / 設定ボタンを配置。NavigationInfo が 3 ボタン判定なら `NavigationNotice` をクッションとして表示。
 
 ### 1.2 アプリドロワー
 
 - `AppDrawerScreen` はホームと同じ `searchQuery` を共有。検索中はフィルタ済みのアプリのみ表示。
-- `AppGrid` で `GridCells.Adaptive(96.dp)`。長押し等のアクションは持たず、タップで `MainActivity.openInstalledApp` を起動。
+- `AppGrid` はアプリをタップで起動、長押しでお気に入り登録/解除やアンインストールダイアログを開けます。
 
 ### 1.3 設定画面
 
@@ -104,7 +104,7 @@ app/src/main/java/com/kafka/launcher
 
 ## 4. 既知の制約
 
-- ホーム/ドロワーの UI は縦スクロールのみ。アプリの長押しピン留めやカテゴリ別表示は未実装。
+- ホーム/ドロワーの UI は縦スクロールのみ。カテゴリ別表示はプレビューのみで、詳細モックアップは用意していません。
 - Theme 切り替えやアイコンサイズ設定はまだ備えていない。設定画面はお気に入り表示とソート切り替えのみ。
 - LLM 連携や通知リスナー等の機能は含まれていない。必要な情報は前述のログ出力で取得する。
 

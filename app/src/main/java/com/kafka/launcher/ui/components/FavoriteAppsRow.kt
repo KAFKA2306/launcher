@@ -1,6 +1,7 @@
 package com.kafka.launcher.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,10 +19,12 @@ import androidx.compose.ui.unit.dp
 import com.kafka.launcher.domain.model.InstalledApp
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun FavoriteAppsRow(
     title: String,
     apps: List<InstalledApp>,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (apps.isEmpty()) return
@@ -34,7 +37,10 @@ fun FavoriteAppsRow(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .padding(vertical = 4.dp)
-                        .clickable { onAppClick(app) }
+                        .combinedClickable(
+                            onClick = { onAppClick(app) },
+                            onLongClick = { onAppLongPress(app) }
+                        )
                 ) {
                     AppIcon(app = app, size = 56.dp)
                     Spacer(modifier = Modifier.height(4.dp))

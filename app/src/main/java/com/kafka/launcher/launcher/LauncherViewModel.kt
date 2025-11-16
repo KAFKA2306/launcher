@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
+import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.domain.model.ActionLog
@@ -28,7 +29,8 @@ class LauncherViewModel(
     private val actionLogRepository: ActionLogRepository,
     private val settingsRepository: SettingsRepository,
     private val recommendActionsUseCase: RecommendActionsUseCase,
-    private val navigationInfo: NavigationInfo
+    private val navigationInfo: NavigationInfo,
+    private val pinnedAppsRepository: PinnedAppsRepository
 ) : ViewModel() {
 
     private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
@@ -44,6 +46,7 @@ class LauncherViewModel(
         observeStats()
         observeRecentLogs()
         observeSettings()
+        observePinnedApps()
         loadApps()
         updateFavoriteApps()
     }
@@ -77,6 +80,18 @@ class LauncherViewModel(
     fun setAppSort(sort: AppSort) {
         viewModelScope.launch {
             settingsRepository.setAppSort(sort)
+        }
+    }
+
+    fun pinApp(packageName: String) {
+        viewModelScope.launch {
+            pinnedAppsRepository.pin(packageName)
+        }
+    }
+
+    fun unpinApp(packageName: String) {
+        viewModelScope.launch {
+            pinnedAppsRepository.unpin(packageName)
         }
     }
 
@@ -116,6 +131,15 @@ class LauncherViewModel(
                 _state.update { it.copy(settings = settings) }
                 updateFavoriteApps()
                 applyFilters()
+            }
+        }
+    }
+
+    private fun observePinnedApps() {
+        viewModelScope.launch {
+            pinnedAppsRepository.pinnedApps.collect { pinned ->
+                _state.update { it.copy(pinnedPackages = pinned) }
+                updateFavoriteApps()
             }
         }
     }
@@ -172,6 +196,9 @@ class LauncherViewModel(
             return
         }
         val appsByPackage = cachedApps.associateBy { it.packageName }
+        val pinned = _state.value.pinnedPackages
+            .mapNotNull { appsByPackage[it] }
+            .sortedBy { it.label.lowercase() }
         val favorites = statsSnapshot.value
             .asSequence()
             .filter { it.actionId.startsWith(LauncherConfig.appUsagePrefix) }
@@ -190,7 +217,11 @@ class LauncherViewModel(
             sortApps(cachedApps, AppSort.NAME).take(LauncherConfig.favoritesLimit)
         }
 
-        _state.update { it.copy(favoriteApps = resolvedFavorites) }
+        val combined = (pinned + resolvedFavorites)
+            .distinctBy { it.packageName }
+            .take(LauncherConfig.favoritesLimit)
+
+        _state.update { it.copy(favoriteApps = combined) }
     }
 
     private fun updateRecentApps() {

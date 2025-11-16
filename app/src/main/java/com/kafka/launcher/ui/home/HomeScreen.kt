@@ -49,6 +49,7 @@ fun HomeScreen(
     onQuickActionClick: (QuickAction) -> Unit,
     onRecommendedClick: (QuickAction) -> Unit,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     navigationInfo: NavigationInfo,
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -92,6 +93,7 @@ fun HomeScreen(
             onClearSearch = onClearSearch,
             onRecommendedClick = onRecommendedClick,
             onAppClick = onAppClick,
+            onAppLongPress = onAppLongPress,
             onQuickActionClick = onQuickActionClick,
             modifier = Modifier
                 .weight(1f)
@@ -108,6 +110,7 @@ private fun BottomLauncherPanel(
     onClearSearch: () -> Unit,
     onRecommendedClick: (QuickAction) -> Unit,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     onQuickActionClick: (QuickAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -153,7 +156,8 @@ private fun BottomLauncherPanel(
                         FavoriteAppsRow(
                             title = stringResource(id = R.string.recents_title),
                             apps = state.recentApps,
-                            onAppClick = onAppClick
+                            onAppClick = onAppClick,
+                            onAppLongPress = onAppLongPress
                         )
                     }
                 }
@@ -162,7 +166,8 @@ private fun BottomLauncherPanel(
                         FavoriteAppsRow(
                             title = stringResource(id = R.string.favorites_title),
                             apps = state.favoriteApps,
-                            onAppClick = onAppClick
+                            onAppClick = onAppClick,
+                            onAppLongPress = onAppLongPress
                         )
                     }
                 }
@@ -175,7 +180,11 @@ private fun BottomLauncherPanel(
                 }
             }
             item {
-                AppGridSection(apps = state.installedApps, onAppClick = onAppClick)
+                AppGridSection(
+                    apps = state.installedApps,
+                    onAppClick = onAppClick,
+                    onAppLongPress = onAppLongPress
+                )
             }
         }
     }
@@ -184,7 +193,8 @@ private fun BottomLauncherPanel(
 @Composable
 private fun AppGridSection(
     apps: List<InstalledApp>,
-    onAppClick: (InstalledApp) -> Unit
+    onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit
 ) {
     if (apps.isEmpty()) {
         Text(text = stringResource(id = R.string.empty_results), style = MaterialTheme.typography.bodyMedium)
@@ -203,6 +213,7 @@ private fun AppGridSection(
         AppGrid(
             apps = apps,
             onAppClick = onAppClick,
+            onAppLongPress = onAppLongPress,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 8.dp)
         )

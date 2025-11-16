@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
+import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.domain.model.NavigationInfo
@@ -15,7 +16,8 @@ class LauncherViewModelFactory(
     private val actionLogRepository: ActionLogRepository,
     private val settingsRepository: SettingsRepository,
     private val recommendActionsUseCase: RecommendActionsUseCase,
-    private val navigationInfo: NavigationInfo
+    private val navigationInfo: NavigationInfo,
+    private val pinnedAppsRepository: PinnedAppsRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -27,7 +29,8 @@ class LauncherViewModelFactory(
                 actionLogRepository = actionLogRepository,
                 settingsRepository = settingsRepository,
                 recommendActionsUseCase = recommendActionsUseCase,
-                navigationInfo = navigationInfo
+                navigationInfo = navigationInfo,
+                pinnedAppsRepository = pinnedAppsRepository
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
