@@ -23,7 +23,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
 - DataStore で保持する `showFavorites` が有効かつ統計が取れていれば `FavoriteAppsRow` を表示。`ActionLogRepository` の `stats` で得た上位 5 アプリを並べます。
-- 最下段でアプリドロワー / AIおすすめプレビュー / 設定ボタンを横並びに配置。`AiRecommendationPreviewButton` を押すとホーム画面上部に Gemini 推薦のミニプレビューを挿入し、`NavigationNotice` は 3 ボタン判定時にクッションとして表示。
+- 最下段でアプリドロワー / AIおすすめプレビュー / 設定ボタンを横並びに配置。`AiRecommendationPreviewButton` はアプリドロワーと同サイズの丸ボタンで、押下すると `AiRecommendationPreview` がホーム画面上部にスライドインし、Gemini 推薦カードの差し替えを即座に確認できる。プレビューは `GeminiRecommendationStore` の Flow を直接読むため、サーバー往復なしで `QuickActionRow` や `FavoriteAppsRow` と同じ内容をその場で反映する。`NavigationNotice` は 3 ボタン判定時にクッションとして表示。
+- `AiRecommendationPreview` は `LauncherState.aiPreview` を縦スワイプ 1 回分のカードとして描画し、`gemini-2.5-pro-exp` から届いた `windows.primaryActionIds` / `globalPins` / `rationales` をタイムライン形式で示す。Gemini 応答が到着しない場合でも DataStore に残っているスナップショットを描画し続け、Android 内部の状態だけで UI が完結する。
 
 ### 1.2 アプリドロワー
 

@@ -116,3 +116,9 @@ KafkaLauncher は端末内のログを 3 時間ごとにまとめ、無料の Ge
 4. `AiRecommendationPreview` も同じ配列で上段プレビューを更新し、`AiRecommendationPreviewButton` を押していなくても `globalPins` に Brave 検索が含まれていれば `FavoriteAppsRow` の 1 スロットが Brave に固定される。
 
 `GeminiRecommendationStore` は常に最新スナップショットを保持するため、Worker の次回更新が遅延してもホーム画面は直近の推薦を描画し続ける。Android 外のオーケストレーションに依存せず、Gemini の応答状況にかかわらず安定した UI を提供できる。
+
+## 5. AIおすすめプレビューの操作と挙動
+
+- `AiRecommendationPreviewButton` はアプリドロワーと並ぶ 3 連ボタンの中央に置き、`LauncherState.aiPreview.isExpanded` をトグルするだけでプレビューを開閉する。ボタン自体は UI レイヤーの状態切り替えに徹し、Gemini への追加リクエストは発生させない。
+- `AiRecommendationPreview` は `windows.primaryActionIds` を時刻順にリストアップし、各エントリの rationales を 1 行メモとして表示する。`globalPins` は横スクロールのタグとして並べ、押す前から QuickActionRow で採用される順番を把握できる。
+- プレビューカードは `GeminiRecommendationStore.observe()` で取得した Flow を Compose の `collectAsState` で反映し、レスポンスが空の場合でも最後のスナップショットを保持する。Android 内の DataStore だけで完結するため、Gemini preview API の応答遅延があっても UI スレッドや WorkManager を塞がない。
