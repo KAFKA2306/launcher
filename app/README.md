@@ -24,4 +24,4 @@ launcherReleaseKeyPassword=your-key-pass
 ## 出力確認
 
 - Debug: `app/build/outputs/apk/debug/app-debug.apk`
-- Release: `app/build/outputs/apk/release/app-release.apk`
+- Release: `app/build/outputs/apk/release/app-release.apk`（リポジトリには含めず、各自で keystore を指定して生成する）
