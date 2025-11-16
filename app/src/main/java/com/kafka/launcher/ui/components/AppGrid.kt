@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -17,10 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.domain.model.InstalledApp
+import com.kafka.launcher.ui.theme.appGridLabel
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -34,8 +37,8 @@ fun AppGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(LauncherConfig.appsPerRow),
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(LauncherConfig.appGridSpacingDp.dp),
+        horizontalArrangement = Arrangement.spacedBy(LauncherConfig.appGridSpacingDp.dp),
         contentPadding = contentPadding
     ) {
         items(apps, key = { it.componentName.flattenToString() }) { app ->
@@ -65,9 +68,12 @@ private fun AppTile(app: InstalledApp, onClick: () -> Unit, onLongClick: () -> U
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = app.label,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                style = MaterialTheme.typography.appGridLabel,
+                maxLines = LauncherConfig.appGridLabelMaxLines,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.width(LauncherConfig.appGridLabelWidthDp.dp),
+                textAlign = TextAlign.Center,
+                softWrap = true
             )
         }
     }

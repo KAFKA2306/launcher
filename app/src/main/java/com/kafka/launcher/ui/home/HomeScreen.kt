@@ -19,12 +19,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +45,7 @@ import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
 import com.kafka.launcher.ui.components.LauncherIcons
+import com.kafka.launcher.ui.components.SectionCard
 
 @Composable
 fun HomeScreen(
@@ -57,6 +61,11 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val dockQuickActions = state.quickActions.take(LauncherConfig.bottomQuickActionLimit)
+    val buttonShape = RoundedCornerShape(LauncherConfig.sectionCardCornerRadiusDp.dp)
+    val primaryButtonElevation = ButtonDefaults.buttonElevation(
+        defaultElevation = LauncherConfig.primaryButtonElevationDefaultDp.dp,
+        pressedElevation = LauncherConfig.primaryButtonElevationPressedDp.dp
+    )
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -72,7 +81,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Button(onClick = onOpenDrawer, modifier = Modifier.weight(1f)) {
+            Button(
+                onClick = onOpenDrawer,
+                modifier = Modifier.weight(1f),
+                shape = buttonShape,
+                elevation = primaryButtonElevation
+            ) {
                 Icon(
                     painter = painterResource(id = LauncherIcons.Drawer),
                     contentDescription = stringResource(id = R.string.drawer_button)
@@ -80,7 +94,12 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(text = stringResource(id = R.string.drawer_button))
             }
-            Button(onClick = onOpenSettings, modifier = Modifier.weight(1f)) {
+            Button(
+                onClick = onOpenSettings,
+                modifier = Modifier.weight(1f),
+                shape = buttonShape,
+                elevation = primaryButtonElevation
+            ) {
                 Icon(
                     painter = painterResource(id = LauncherIcons.Ai),
                     contentDescription = stringResource(id = R.string.ai_button)
@@ -88,7 +107,12 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(text = stringResource(id = R.string.ai_button))
             }
-            Button(onClick = onOpenSettings, modifier = Modifier.weight(1f)) {
+            Button(
+                onClick = onOpenSettings,
+                modifier = Modifier.weight(1f),
+                shape = buttonShape,
+                elevation = primaryButtonElevation
+            ) {
                 Text(text = stringResource(id = R.string.settings_button))
             }
         }
@@ -130,8 +154,11 @@ private fun BottomLauncherPanel(
                 .align(Alignment.BottomCenter)
                 .fillMaxSize()
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            verticalArrangement = Arrangement.spacedBy(LauncherConfig.sectionVerticalSpacingDp.dp),
+            contentPadding = PaddingValues(
+                top = LauncherConfig.sectionSpacingTopDp.dp,
+                bottom = LauncherConfig.sectionSpacingBottomDp.dp
+            )
         ) {
             item {
                 KafkaSearchBar(
@@ -143,47 +170,61 @@ private fun BottomLauncherPanel(
             }
             if (isSearching) {
                 item {
-                    SearchResults(
-                        actions = state.filteredQuickActions,
-                        apps = state.filteredApps,
-                        onQuickActionClick = onQuickActionClick,
-                        onAppClick = onAppClick
-                    )
+                    SectionCard(modifier = Modifier.fillMaxWidth()) {
+                        SearchResults(
+                            actions = state.filteredQuickActions,
+                            apps = state.filteredApps,
+                            onQuickActionClick = onQuickActionClick,
+                            onAppClick = onAppClick
+                        )
+                    }
                 }
             } else {
-                item {
-                    QuickActionRow(
-                        title = stringResource(id = R.string.recommended_title),
-                        actions = state.recommendedActions,
-                        onActionClick = onRecommendedClick
-                    )
+                if (state.recommendedActions.isNotEmpty()) {
+                    item {
+                        SectionCard(modifier = Modifier.fillMaxWidth()) {
+                            QuickActionRow(
+                                title = stringResource(id = R.string.recommended_title),
+                                actions = state.recommendedActions,
+                                onActionClick = onRecommendedClick
+                            )
+                        }
+                    }
                 }
                 if (state.recentApps.isNotEmpty()) {
                     item {
-                        FavoriteAppsRow(
-                            title = stringResource(id = R.string.recents_title),
-                            apps = state.recentApps,
-                            onAppClick = onAppClick,
-                            onAppLongPress = onAppLongPress
-                        )
+                        SectionCard(modifier = Modifier.fillMaxWidth()) {
+                            FavoriteAppsRow(
+                                title = stringResource(id = R.string.recents_title),
+                                apps = state.recentApps,
+                                onAppClick = onAppClick,
+                                onAppLongPress = onAppLongPress
+                            )
+                        }
                     }
                 }
                 if (state.settings.showFavorites && state.favoriteApps.isNotEmpty()) {
                     item {
-                        FavoriteAppsRow(
-                            title = stringResource(id = R.string.favorites_title),
-                            apps = state.favoriteApps,
-                            onAppClick = onAppClick,
-                            onAppLongPress = onAppLongPress
-                        )
+                        SectionCard(modifier = Modifier.fillMaxWidth()) {
+                            FavoriteAppsRow(
+                                title = stringResource(id = R.string.favorites_title),
+                                apps = state.favoriteApps,
+                                onAppClick = onAppClick,
+                                onAppLongPress = onAppLongPress
+                            )
+                        }
                     }
                 }
-                item {
-                    QuickActionRow(
-                        title = stringResource(id = R.string.actions_title),
-                        actions = quickActions,
-                        onActionClick = onQuickActionClick
-                    )
+                if (quickActions.isNotEmpty()) {
+                    item {
+                        SectionCard(modifier = Modifier.fillMaxWidth()) {
+                            QuickActionRow(
+                                title = stringResource(id = R.string.actions_title),
+                                actions = quickActions,
+                                onActionClick = onQuickActionClick
+                            )
+                        }
+                    }
                 }
             }
             item {
@@ -204,26 +245,31 @@ private fun AppGridSection(
     onAppLongPress: (InstalledApp) -> Unit
 ) {
     if (apps.isEmpty()) {
-        Text(text = stringResource(id = R.string.empty_results), style = MaterialTheme.typography.bodyMedium)
+        SectionCard(modifier = Modifier.fillMaxWidth()) {
+            Text(text = stringResource(id = R.string.empty_results), style = MaterialTheme.typography.bodyMedium)
+        }
         return
     }
-    Text(
-        text = stringResource(id = R.string.drawer_title),
-        style = MaterialTheme.typography.titleMedium
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(LauncherConfig.homeGridMinHeightDp.dp)
-    ) {
-        AppGrid(
-            apps = apps,
-            onAppClick = onAppClick,
-            onAppLongPress = onAppLongPress,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 8.dp)
+    SectionCard(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(id = R.string.drawer_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(LauncherConfig.homeGridMinHeightDp.dp)
+        ) {
+            AppGrid(
+                apps = apps,
+                onAppClick = onAppClick,
+                onAppLongPress = onAppLongPress,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 8.dp)
+            )
+        }
     }
 }
 
@@ -271,7 +317,11 @@ private fun SearchResults(
 
 @Composable
 private fun SearchResultCard(title: String, subtitle: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = LauncherConfig.sectionCardElevationDp.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(4.dp))

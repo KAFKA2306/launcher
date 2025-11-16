@@ -76,6 +76,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private val quickActionExecutor by lazy { QuickActionExecutor(this, auditLogger) }
+    private val uninstallLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        launcherViewModel.refreshApps()
+    }
     private val roleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -125,7 +128,7 @@ class MainActivity : ComponentActivity() {
             data = ("package:$packageName").toUri()
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        startActivity(intent)
+        uninstallLauncher.launch(intent)
     }
 
     private fun requestHomeRole() {

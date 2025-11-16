@@ -97,6 +97,10 @@ class LauncherViewModel(
         }
     }
 
+    fun refreshApps() {
+        loadApps()
+    }
+
     fun pinApp(packageName: String) {
         viewModelScope.launch {
             pinnedAppsRepository.pin(packageName)
