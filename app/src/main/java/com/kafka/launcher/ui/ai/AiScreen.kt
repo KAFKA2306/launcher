@@ -1,7 +1,5 @@
 package com.kafka.launcher.ui.ai
 
-import androidx.compose.foundation.Indication
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,68 +41,66 @@ fun AiScreen(
     onRestore: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    CompositionLocalProvider(LocalIndication provides null as Indication?) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = stringResource(id = R.string.ai_screen_title)) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                painter = painterResource(id = LauncherIcons.Back),
-                                contentDescription = stringResource(id = R.string.drawer_back)
-                            )
-                        }
-                    },
-                    actions = {
-                        OutlinedButton(onClick = onRefresh) {
-                            Text(text = stringResource(id = R.string.ai_sync_now))
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = stringResource(id = R.string.ai_screen_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(id = LauncherIcons.Back),
+                            contentDescription = stringResource(id = R.string.drawer_back)
+                        )
                     }
+                },
+                actions = {
+                    OutlinedButton(onClick = onRefresh) {
+                        Text(text = stringResource(id = R.string.ai_sync_now))
+                    }
+                }
+            )
+        },
+        modifier = modifier.fillMaxSize()
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                SyncHeader(state = state)
+            }
+            item {
+                AiSection(
+                    title = stringResource(id = R.string.ai_section_candidates),
+                    actions = state.candidates,
+                    primaryLabel = stringResource(id = R.string.ai_action_accept),
+                    secondaryLabel = stringResource(id = R.string.ai_action_hide),
+                    onPrimary = onAccept,
+                    onSecondary = onDismiss
                 )
-            },
-            modifier = modifier.fillMaxSize()
-        ) { padding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    SyncHeader(state = state)
-                }
-                item {
-                    AiSection(
-                        title = stringResource(id = R.string.ai_section_candidates),
-                        actions = state.candidates,
-                        primaryLabel = stringResource(id = R.string.ai_action_accept),
-                        secondaryLabel = stringResource(id = R.string.ai_action_hide),
-                        onPrimary = onAccept,
-                        onSecondary = onDismiss
-                    )
-                }
-                item {
-                    AiSection(
-                        title = stringResource(id = R.string.ai_section_adopted),
-                        actions = state.adopted,
-                        primaryLabel = stringResource(id = R.string.ai_action_hide),
-                        onPrimary = onDismiss,
-                        onSecondary = null,
-                        secondaryLabel = null
-                    )
-                }
-                item {
-                    AiSection(
-                        title = stringResource(id = R.string.ai_section_hidden),
-                        actions = state.hidden,
-                        primaryLabel = stringResource(id = R.string.ai_action_restore),
-                        onPrimary = onRestore,
-                        onSecondary = null,
-                        secondaryLabel = null
-                    )
-                }
+            }
+            item {
+                AiSection(
+                    title = stringResource(id = R.string.ai_section_adopted),
+                    actions = state.adopted,
+                    primaryLabel = stringResource(id = R.string.ai_action_hide),
+                    onPrimary = onDismiss,
+                    onSecondary = null,
+                    secondaryLabel = null
+                )
+            }
+            item {
+                AiSection(
+                    title = stringResource(id = R.string.ai_section_hidden),
+                    actions = state.hidden,
+                    primaryLabel = stringResource(id = R.string.ai_action_restore),
+                    onPrimary = onRestore,
+                    onSecondary = null,
+                    secondaryLabel = null
+                )
             }
         }
     }
