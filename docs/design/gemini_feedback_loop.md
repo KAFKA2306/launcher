@@ -13,12 +13,12 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 
 | レイヤー | 役割 | 主要 API |
 | --- | --- | --- |
-| config | `GeminiConfig` に周期・エンドポイント・モデル名・生成設定・ファイルパス・WorkName を集約。 | `GeminiConfig.periodHours` `GeminiConfig.endpoint` |
+| config | `GeminiConfig` に周期・エンドポイント・モデル名・生成設定・ファイルパス・WorkName・APIキー保存先を集約。 | `GeminiConfig.periodHours` `GeminiConfig.endpoint` `GeminiConfig.apiKeyStoreFileName` |
 | data | `ActionLogRepository` が DAO/ファイル、`GeminiRecommendationStore` が JSON ファイルを提供。 | `exportEvents(limit)` `statsSnapshot(limit)` `GeminiRecommendationStore.data` |
 | domain | `GeminiPayloadBuilder` が UTC 正規化と JSON 生成、`RecommendActionsUseCase` がフォールバックを返す。 | `build(events, stats)` |
 | worker | `GeminiSyncWorker` が `WorkManager` から実行され、Payload 生成→API 呼び出し→ストア更新を直列化。 | `doWork()` |
 | remote | `GeminiApiClient` が `OkHttpClient` で 1 回の POST を送信し Structured Output を解析。 | `fetchRecommendations(payload, apiKey)` |
-| store | `GeminiRecommendationStore` が `/files/config/gemini_recommendations.json` を直接読み書きする。 | `data: Flow<GeminiRecommendations?>` `update(snapshot)` |
+| store | `GeminiRecommendationStore` が `/files/config/gemini_recommendations.json` を直接読み書きし、`GeminiApiKeyStore` が EncryptedSharedPreferences で API キーを保持する。 | `GeminiRecommendationStore.data` `GeminiApiKeyStore.data` |
 | launcher | `LauncherViewModel` が quick actions / stats / Gemini Flow を集約し UI state に落とし込む。 | `refreshGeminiOutputs()` |
 | ui | `HomeScreen` の 3 ボタン行と `AiRecommendationPreview` が Gemini 状態を描画。 | `AiRecommendationPreview(state)` |
 
@@ -62,7 +62,7 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 - エンドポイント: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent`
 - `generationConfig`: `GeminiConfig.generationConfig`（temperature/topP/responseMimeType/ActionRecommendationSet schema）
 - リクエスト構造: `contents[0]` に指示文、`contents[1].parts[0].text` に `payload.json` を JSON 文字列として埋め込む。
-- API キー: `app/build.gradle.kts` が `GEMINI_API_KEY` プロパティを `resValue("string", "gemini_api_key", …)` で埋め込む。`GeminiSyncWorker` は `R.string.gemini_api_key` を読み、空文字の場合は送信をスキップする。
+- API キー: 設定画面で入力した値を `GeminiApiKeyStore` が `GeminiConfig.apiKeyStoreFileName`（EncryptedSharedPreferences + MasterKey）に保存し、`GeminiSyncWorker` は `GeminiApiKeyStore.current()` から取得して空の場合は即終了する。
 - レスポンス解析: `GeminiApiClient` が `candidates[0].content.parts[0].text` を JSON として `GeminiRecommendationJson.decode` へ渡し、欠損時は `null` を返す。
 
 ## 推薦保存と配信
@@ -78,11 +78,11 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 - `AiRecommendationPreview` カードは `generatedAt` のローカル時刻表示、`window.id`、`primary/fallback` のラベル列、`rationales` の要約を同時に描画し、データが空でも最後のスナップショットを保持する。
 - `QuickActionRow` には Gemini 推薦（`window.primaryActionIds` → 実在する QuickAction から最大 4 件）が表示され、欠損時は `RecommendActionsUseCase` のフォールバックを使用する。
 - `FavoriteAppsRow` は `GeminiRecommendations.globalPins` → `PinnedAppsRepository` → 行動ログ順の優先順位で 5 件を決定する。
-- 設定画面には `Gemini 最終更新` セクションを追加し、ISO 文字列をローカル時刻に変換した値、もしくは未生成メッセージを表示する。
+- 設定画面には `Gemini 最終更新` セクションと API キー入力欄を置き、`LauncherState.geminiApiKeyInput` を編集→「保存」で `GeminiApiKeyStore.save`、`isGeminiApiKeyConfigured` に応じて「削除」を制御する。
 
 ## 最小リリース手順
 
-1. `gradle.properties` などに `GEMINI_API_KEY` をセットし、`./gradlew assembleDebug` で `resValue` を注入する。
+1. アプリ起動後に設定画面を開き、「Gemini APIキー」に自身のキーを貼り付けて保存する（EncryptedSharedPreferences に永続化され、アップデート後も維持される）。
 2. アプリ起動または `adb shell am broadcast -a android.intent.action.BOOT_COMPLETED` で `GeminiWorkScheduler` が登録されていることを `adb shell dumpsys jobscheduler` で確認する。
 3. `adb logcat | grep GeminiSyncWorker` で payload 生成→API POST→`GeminiRecommendationStore` 更新のログを確認する。
 4. `adb shell run-as com.kafka.launcher cat files/config/gemini_recommendations.json` で JSON が更新されることを確認する。

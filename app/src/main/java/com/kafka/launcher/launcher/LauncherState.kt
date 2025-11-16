@@ -24,6 +24,8 @@ data class LauncherState(
     val recommendationTimestamp: String? = null,
     val currentTimeWindowId: String? = null,
     val aiPreview: AiPreviewState = AiPreviewState(),
+    val geminiApiKeyInput: String = "",
+    val geminiApiKeyConfigured: Boolean = false,
     val isLoading: Boolean = true
 )
 

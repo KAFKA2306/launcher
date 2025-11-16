@@ -23,6 +23,7 @@ import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.data.store.GeminiRecommendationStore
+import com.kafka.launcher.data.store.GeminiApiKeyStore
 import com.kafka.launcher.data.system.NavigationInfoResolver
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
     private val auditLogger by lazy { QuickActionAuditLogger(applicationContext) }
     private val actionLogFileWriter by lazy { ActionLogFileWriter(applicationContext) }
     private val geminiStore by lazy { GeminiRecommendationStore(applicationContext) }
+    private val geminiApiKeyStore by lazy { GeminiApiKeyStore(applicationContext) }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -67,7 +69,8 @@ class MainActivity : ComponentActivity() {
             pinnedAppsRepository = PinnedAppsRepository(appContext.settingsDataStore),
             recommendActionsUseCase = RecommendActionsUseCase(),
             navigationInfo = navigationInfo,
-            geminiRecommendationStore = geminiStore
+            geminiRecommendationStore = geminiStore,
+            geminiApiKeyStore = geminiApiKeyStore
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }
@@ -95,7 +98,10 @@ class MainActivity : ComponentActivity() {
                 onPinApp = launcherViewModel::pinApp,
                 onUnpinApp = launcherViewModel::unpinApp,
                 onDeleteApp = ::uninstallApp,
-                onToggleAiPreview = launcherViewModel::toggleAiPreview
+                onToggleAiPreview = launcherViewModel::toggleAiPreview,
+                onGeminiApiKeyInputChange = launcherViewModel::onGeminiApiKeyInputChange,
+                onSaveGeminiApiKey = launcherViewModel::saveGeminiApiKey,
+                onClearGeminiApiKey = launcherViewModel::clearGeminiApiKey
             )
         }
     }
@@ -146,7 +152,10 @@ private fun KafkaLauncherApp(
     onPinApp: (String) -> Unit,
     onUnpinApp: (String) -> Unit,
     onDeleteApp: (String) -> Unit,
-    onToggleAiPreview: () -> Unit
+    onToggleAiPreview: () -> Unit,
+    onGeminiApiKeyInputChange: (String) -> Unit,
+    onSaveGeminiApiKey: () -> Unit,
+    onClearGeminiApiKey: () -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -162,7 +171,10 @@ private fun KafkaLauncherApp(
             onPinApp = onPinApp,
             onUnpinApp = onUnpinApp,
             onDeleteApp = onDeleteApp,
-            onToggleAiPreview = onToggleAiPreview
+            onToggleAiPreview = onToggleAiPreview,
+            onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
+            onSaveGeminiApiKey = onSaveGeminiApiKey,
+            onClearGeminiApiKey = onClearGeminiApiKey
         )
     }
 }

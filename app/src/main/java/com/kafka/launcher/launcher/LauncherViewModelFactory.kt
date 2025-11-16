@@ -8,6 +8,7 @@ import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.data.store.GeminiRecommendationStore
+import com.kafka.launcher.data.store.GeminiApiKeyStore
 import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
 
@@ -19,7 +20,8 @@ class LauncherViewModelFactory(
     private val recommendActionsUseCase: RecommendActionsUseCase,
     private val navigationInfo: NavigationInfo,
     private val pinnedAppsRepository: PinnedAppsRepository,
-    private val geminiRecommendationStore: GeminiRecommendationStore
+    private val geminiRecommendationStore: GeminiRecommendationStore,
+    private val geminiApiKeyStore: GeminiApiKeyStore
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -33,7 +35,8 @@ class LauncherViewModelFactory(
                 recommendActionsUseCase = recommendActionsUseCase,
                 navigationInfo = navigationInfo,
                 pinnedAppsRepository = pinnedAppsRepository,
-                geminiRecommendationStore = geminiRecommendationStore
+                geminiRecommendationStore = geminiRecommendationStore,
+                geminiApiKeyStore = geminiApiKeyStore
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

@@ -38,6 +38,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - 「よく使うアプリ表示」トグルと「並び順（名前 / 使用頻度）」ラジオボタン。
 - 「デフォルトホームに設定」ボタンで `RoleManager` へ遷移要求。
 - ナビゲーションが 3 ボタンの場合はホーム同様 `NavigationNotice` を最上段に表示。
+- 「Gemini APIキー」セクションで入力→保存すると `EncryptedSharedPreferences` に永続化され、削除ボタンで端末から除去できる。保存状態は `Gemini 最終更新` 情報と共に表示される。
 
 ### 1.4 クイックアクション
 

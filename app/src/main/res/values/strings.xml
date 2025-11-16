@@ -44,4 +44,10 @@
     <string name="ai_preview_rationale_title">理由</string>
     <string name="settings_gemini_last_synced">Gemini 最終更新: %1$s</string>
     <string name="settings_gemini_never">Gemini 推薦は未生成</string>
+    <string name="settings_gemini_api_key_title">Gemini APIキー</string>
+    <string name="settings_gemini_api_key_placeholder">APIキーを入力</string>
+    <string name="settings_gemini_api_key_save">保存</string>
+    <string name="settings_gemini_api_key_clear">削除</string>
+    <string name="settings_gemini_api_key_configured">端末に保存済み</string>
+    <string name="settings_gemini_api_key_missing">未設定</string>
 </resources>

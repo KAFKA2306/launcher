@@ -13,6 +13,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.Settings
@@ -42,6 +45,11 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onRequestHomeRole: () -> Unit,
     recommendationTimestamp: String?,
+    geminiApiKeyInput: String,
+    isGeminiApiKeyConfigured: Boolean,
+    onGeminiApiKeyInputChange: (String) -> Unit,
+    onSaveGeminiApiKey: () -> Unit,
+    onClearGeminiApiKey: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -96,6 +104,43 @@ fun SettingsScreen(
                     stringResource(id = R.string.settings_gemini_last_synced, formatGeminiTimestamp(timestamp))
                 } ?: stringResource(id = R.string.settings_gemini_never)
                 Text(text = geminiText, style = MaterialTheme.typography.bodySmall)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(text = stringResource(id = R.string.settings_gemini_api_key_title))
+                OutlinedTextField(
+                    value = geminiApiKeyInput,
+                    onValueChange = onGeminiApiKeyInputChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(text = stringResource(id = R.string.settings_gemini_api_key_placeholder)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onSaveGeminiApiKey,
+                        enabled = geminiApiKeyInput.isNotBlank(),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.settings_gemini_api_key_save))
+                    }
+                    OutlinedButton(
+                        onClick = onClearGeminiApiKey,
+                        enabled = isGeminiApiKeyConfigured,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(id = R.string.settings_gemini_api_key_clear))
+                    }
+                }
+                val statusText = if (isGeminiApiKeyConfigured) {
+                    stringResource(id = R.string.settings_gemini_api_key_configured)
+                } else {
+                    stringResource(id = R.string.settings_gemini_api_key_missing)
+                }
+                Text(
+                    text = statusText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

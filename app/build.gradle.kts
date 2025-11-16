@@ -2,10 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
+alias(libs.plugins.ksp)
 }
-
-val geminiApiKey = (project.findProperty("GEMINI_API_KEY") as? String) ?: ""
 
 android {
     namespace = "com.kafka.launcher"
@@ -17,7 +15,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        resValue("string", "gemini_api_key", geminiApiKey)
     }
 
     buildTypes {
@@ -91,6 +88,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.work.runtime)
     implementation(libs.okhttp)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.error.prone.annotations)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

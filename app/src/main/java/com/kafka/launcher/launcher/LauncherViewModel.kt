@@ -10,6 +10,7 @@ import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.data.store.GeminiRecommendationStore
+import com.kafka.launcher.data.store.GeminiApiKeyStore
 import com.kafka.launcher.domain.model.ActionLog
 import com.kafka.launcher.domain.model.ActionStats
 import com.kafka.launcher.domain.model.AppCategory
@@ -38,7 +39,8 @@ class LauncherViewModel(
     private val recommendActionsUseCase: RecommendActionsUseCase,
     private val navigationInfo: NavigationInfo,
     private val pinnedAppsRepository: PinnedAppsRepository,
-    private val geminiRecommendationStore: GeminiRecommendationStore
+    private val geminiRecommendationStore: GeminiRecommendationStore,
+    private val geminiApiKeyStore: GeminiApiKeyStore
 ) : ViewModel() {
 
     private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
@@ -58,6 +60,7 @@ class LauncherViewModel(
         observeSettings()
         observePinnedApps()
         observeGeminiRecommendations()
+        observeGeminiApiKey()
         loadApps()
         updateFavoriteApps()
     }
@@ -111,11 +114,39 @@ class LauncherViewModel(
         _state.update { it.copy(aiPreview = current.copy(isExpanded = !current.isExpanded)) }
     }
 
+    fun onGeminiApiKeyInputChange(value: String) {
+        _state.update { it.copy(geminiApiKeyInput = value) }
+    }
+
+    fun saveGeminiApiKey() {
+        val input = _state.value.geminiApiKeyInput.trim()
+        if (input.isBlank()) return
+        viewModelScope.launch {
+            geminiApiKeyStore.save(input)
+            _state.update { it.copy(geminiApiKeyInput = "") }
+        }
+    }
+
+    fun clearGeminiApiKey() {
+        viewModelScope.launch {
+            geminiApiKeyStore.clear()
+            _state.update { it.copy(geminiApiKeyInput = "") }
+        }
+    }
+
     private fun observeQuickActions() {
         viewModelScope.launch {
             quickActionRepository.observe().collect { actions ->
                 rawQuickActions = actions
                 refreshGeminiOutputs()
+            }
+        }
+    }
+
+    private fun observeGeminiApiKey() {
+        viewModelScope.launch {
+            geminiApiKeyStore.data.collect { key ->
+                _state.update { it.copy(geminiApiKeyConfigured = key.isNotBlank()) }
             }
         }
     }

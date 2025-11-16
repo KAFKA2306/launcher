@@ -15,6 +15,9 @@ object GeminiConfig {
     const val payloadEventLimit = 200
     const val aiPreviewWindowLimit = 4
     const val aiPreviewRationaleLimit = 6
+    const val apiKeyStoreFileName = "gemini_api"
+    const val apiKeyPreferenceKey = "api_key"
+    const val apiMasterKeyAlias = "gemini_master_key"
     val networkType: NetworkType = NetworkType.UNMETERED
     private val responseSchema = """
         {

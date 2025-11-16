@@ -38,6 +38,9 @@ fun LauncherNavHost(
     onUnpinApp: (String) -> Unit,
     onDeleteApp: (String) -> Unit,
     onToggleAiPreview: () -> Unit,
+    onGeminiApiKeyInputChange: (String) -> Unit,
+    onSaveGeminiApiKey: () -> Unit,
+    onClearGeminiApiKey: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -80,7 +83,12 @@ fun LauncherNavHost(
                 onSortSelected = onSortSelected,
                 onBack = { navController.popBackStack() },
                 onRequestHomeRole = onRequestHomeRole,
-                recommendationTimestamp = state.recommendationTimestamp
+                recommendationTimestamp = state.recommendationTimestamp,
+                geminiApiKeyInput = state.geminiApiKeyInput,
+                isGeminiApiKeyConfigured = state.geminiApiKeyConfigured,
+                onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
+                onSaveGeminiApiKey = onSaveGeminiApiKey,
+                onClearGeminiApiKey = onClearGeminiApiKey
             )
         }
     }

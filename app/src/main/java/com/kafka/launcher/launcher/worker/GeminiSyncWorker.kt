@@ -3,13 +3,13 @@ package com.kafka.launcher.launcher.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kafka.launcher.R
 import com.kafka.launcher.config.GeminiConfig
 import com.kafka.launcher.data.local.db.KafkaDatabase
 import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.data.remote.GeminiApiClient
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.store.GeminiRecommendationStore
+import com.kafka.launcher.data.store.GeminiApiKeyStore
 import com.kafka.launcher.domain.usecase.GeminiPayloadBuilder
 import java.time.Duration
 import java.time.Instant
@@ -21,6 +21,7 @@ class GeminiSyncWorker(appContext: Context, params: WorkerParameters) : Coroutin
     private val recommendationStore = GeminiRecommendationStore(context)
     private val payloadBuilder = GeminiPayloadBuilder()
     private val apiClient = GeminiApiClient()
+    private val apiKeyStore = GeminiApiKeyStore(context)
 
     override suspend fun doWork(): Result {
         val last = recommendationStore.snapshot()
@@ -36,8 +37,11 @@ class GeminiSyncWorker(appContext: Context, params: WorkerParameters) : Coroutin
         if (events.isEmpty() && stats.isEmpty()) {
             return Result.success()
         }
+        val apiKey = apiKeyStore.current()
+        if (apiKey.isBlank()) {
+            return Result.success()
+        }
         val payload = payloadBuilder.build(events, stats)
-        val apiKey = context.getString(R.string.gemini_api_key)
         val recommendations = apiClient.fetchRecommendations(payload, apiKey)
         if (recommendations != null) {
             val stamped = recommendations.copy(generatedAt = now.toString())
