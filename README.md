@@ -75,11 +75,12 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 `logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できる。
 
-#### Gemini 再スコアリングサイクル（仕様段階）
+#### Gemini 再スコアリングサイクル（実装済み）
 
-- `GeminiSyncWorker` / `GeminiPayloadBuilder` / `GeminiRecommendationStore` / `AiRecommendationPreview` はまだコード化されていない。ここで説明している 3 時間サイクルは、端末内でログ→`gemini-2.5-pro-exp`→UI 反映まで閉じる将来実装の設計メモである。
-- 設計では WorkManager が `ActionLogRepository` と `QuickActionAuditLogger` の統計を収集し、`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent` へ送信する。Structured Output で受け取った推薦を DataStore に保存し、差分だけを `LauncherViewModel` の Flow に流す計画になっている。
-- `QuickActionRow` / `FavoriteAppsRow` / `AiRecommendationPreview` は DataStore の更新をそのまま描画し、Gemini 応答が遅延・欠損した場合でも端末内スナップショットを使って UI を維持する想定。詳細なパイプラインとスキーマは `docs/design/gemini_feedback_loop.md` にまとめている。
+1. `GeminiWorkScheduler` がアプリ起動時と `BOOT_COMPLETED` 受信時に `GeminiSyncWorker` を `WorkManager` (`NetworkType.UNMETERED`, 3 時間間隔) へ登録する。
+2. Worker は `ActionLogRepository.exportEvents()` / `statsSnapshot()` のスナップショットを `GeminiPayloadBuilder` で JSON 化し、`GeminiConfig` の `generationConfig` とレスポンススキーマを添えて `GeminiApiClient` から `gemini-2.5-pro-exp` へ POST する。
+3. 応答は `GeminiRecommendationStore` の `/files/config/gemini_recommendations.json` に保存され、`LauncherViewModel` が Flow を購読して `LauncherState.recommendedActions` / `favoriteApps` / `aiPreview` / `currentTimeWindowId` へ反映する。
+4. `globalPins` はお気に入り行の優先枠、`suppressions` は QuickAction 非表示、`windows.primaryActionIds` は現在時間帯のおすすめ行と `AiRecommendationPreview` 双方へ渡される。詳細スキーマと動作は `docs/design/gemini_feedback_loop.md` を参照。
 
 ## 2. アーキテクチャ
 
@@ -107,9 +108,10 @@ app/src/main/java/com/kafka/launcher
 
 ## 3. データフロー
 
-1. `MainActivity` 起動 → `LauncherViewModel` 初期化 → `AppRepository.loadApps()` / `QuickActionRepository.observe()` / `ActionLogRepository.stats()` / `SettingsRepository.settings` を並行監視。
+1. `MainActivity` 起動 → `GeminiWorkScheduler.schedule()` で WorkManager を登録 → `LauncherViewModel` が `AppRepository` / `QuickActionRepository` / `ActionLogRepository` / `SettingsRepository` / `GeminiRecommendationStore` を並行監視。
 2. QuickAction 実行 (`MainActivity.handleQuickAction`) → `QuickActionExecutor` が Intent を解決し、成功時に `QuickActionAuditLogger.logExecution` と `ActionLogRepository.log()` を呼ぶ。
-3. アプリ起動 (`openInstalledApp`) も `ActionLogRepository` へ記録し、次回の使用頻度ソートやお気に入り候補に反映。
+3. アプリ起動 (`openInstalledApp`) も `ActionLogRepository` へ記録し、`GeminiPayloadBuilder` の素材となる使用履歴が蓄積される。
+4. `GeminiSyncWorker` が 3 時間ごとに `exportEvents`/`statsSnapshot` をまとめ、API 応答を `GeminiRecommendationStore` に保存 → `LauncherViewModel` が `LauncherState` を再計算し UI へ反映。
 
 ## 4. 既知の制約
 
