@@ -63,6 +63,16 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `logs_manifest.json` : 上記ファイルと `logs_bundle.zip` のメタデータ（サイズ / 更新時刻）を列挙。
 - `logs_bundle.zip` : すべてのログと `logs_manifest.json` をまとめたアーカイブ。PC 側はこれを定期的に Pull するだけで同期完了。
 
+#### PC へのログ取得手順
+
+1. `adb devices` で端末が接続済みであることを確認する。
+2. `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認し、`logs_bundle.zip` の更新時刻とサイズを把握する。
+3. `adb shell "toybox cp -f /sdcard/Android/data/com.kafka.launcher/files/logs/logs_bundle.zip /sdcard/Download/launcher_logs_bundle.zip"` で誰でも読める `Download` フォルダへ複製する。
+4. `adb pull /sdcard/Download/launcher_logs_bundle.zip ./launcher_logs_bundle.zip` を実行して PC へ取得する。
+5. `unzip launcher_logs_bundle.zip -d launcher_logs_bundle` で展開し、`logs_manifest.json` に沿って差分管理する。
+
+`logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できる。
+
 #### Gemini 再スコアリングサイクル（仕様段階）
 
 - `GeminiSyncWorker` / `GeminiPayloadBuilder` / `GeminiRecommendationStore` / `AiRecommendationPreview` はまだコード化されていない。ここで説明している 3 時間サイクルは、端末内でログ→`gemini-2.5-pro-exp`→UI 反映まで閉じる将来実装の設計メモである。
@@ -101,7 +111,7 @@ app/src/main/java/com/kafka/launcher
 
 ## 4. 既知の制約
 
-- ホーム/ドロワーの UI は縦スクロールのみ。アプリの長押しピン留めやカテゴリ別表示は未実装。
+- ホーム/ドロワーの UI は縦スクロールのみ。カテゴリ別表示はアイデア段階で詳細モックアップはなく、アプリ長押しのピン留めやアクションシートも未実装。
 - Theme 切り替えやアイコンサイズ設定はまだ備えていない。設定画面はお気に入り表示とソート切り替えのみ。
 - LLM 連携や通知リスナー等の機能は含まれていない。必要な情報は前述のログ出力で取得する。
 
