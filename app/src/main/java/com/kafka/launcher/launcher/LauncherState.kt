@@ -26,7 +26,8 @@ data class LauncherState(
     val aiPreview: AiPreviewState = AiPreviewState(),
     val geminiApiKeyInput: String = "",
     val geminiApiKeyConfigured: Boolean = false,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val aiCenter: AiCenterState = AiCenterState()
 )
 
 data class AiPreviewState(
@@ -44,4 +45,22 @@ data class AiPreviewWindow(
 data class AiPreviewRationale(
     val target: String,
     val summary: String
+)
+
+data class AiCenterState(
+    val lastUpdated: String = "",
+    val candidates: List<AiActionUiModel> = emptyList(),
+    val adopted: List<AiActionUiModel> = emptyList(),
+    val hidden: List<AiActionUiModel> = emptyList(),
+    val isSyncing: Boolean = false
+)
+
+data class AiActionUiModel(
+    val id: String,
+    val label: String,
+    val detail: String,
+    val timeWindows: List<String>,
+    val usageCount: Long,
+    val acceptedCount: Long,
+    val dismissedCount: Long
 )

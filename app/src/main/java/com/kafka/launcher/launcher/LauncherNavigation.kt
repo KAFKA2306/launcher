@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
+import com.kafka.launcher.ui.ai.AiScreen
 import com.kafka.launcher.ui.components.AppActionsDialog
 import com.kafka.launcher.ui.drawer.AppDrawerScreen
 import com.kafka.launcher.ui.home.HomeScreen
@@ -21,6 +22,7 @@ object LauncherDestinations {
     const val HOME = "home"
     const val DRAWER = "drawer"
     const val SETTINGS = "settings"
+    const val AI = "ai"
 }
 
 @Composable
@@ -40,6 +42,10 @@ fun LauncherNavHost(
     onGeminiApiKeyInputChange: (String) -> Unit,
     onSaveGeminiApiKey: () -> Unit,
     onClearGeminiApiKey: () -> Unit,
+    onAiRefresh: () -> Unit,
+    onAiAccept: (String) -> Unit,
+    onAiDismiss: (String) -> Unit,
+    onAiRestore: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -59,6 +65,7 @@ fun LauncherNavHost(
                 onAppClick = onAppClick,
                 onAppLongPress = { selectedApp = it },
                 onOpenDrawer = { navController.navigate(LauncherDestinations.DRAWER) },
+                onOpenAi = { navController.navigate(LauncherDestinations.AI) },
                 onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) }
             )
         }
@@ -87,6 +94,16 @@ fun LauncherNavHost(
                 onSaveGeminiApiKey = onSaveGeminiApiKey,
                 onClearGeminiApiKey = onClearGeminiApiKey,
                 aiPreviewState = state.aiPreview
+            )
+        }
+        composable(LauncherDestinations.AI) {
+            AiScreen(
+                state = state.aiCenter,
+                onBack = { navController.popBackStack() },
+                onRefresh = onAiRefresh,
+                onAccept = onAiAccept,
+                onDismiss = onAiDismiss,
+                onRestore = onAiRestore
             )
         }
     }

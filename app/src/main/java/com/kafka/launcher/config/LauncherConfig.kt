@@ -15,6 +15,8 @@ object LauncherConfig {
     const val logPackageFileName = "logs_bundle.zip"
     const val quickActionSnapshotFileName = "quickactions_snapshot.txt"
     const val quickActionEventsFileName = "quickactions_events.txt"
+    const val quickActionCatalogDirectory = "config"
+    const val quickActionCatalogFileName = "quickaction_catalog.json"
     const val actionLogEventsFileName = "action_events.jsonl"
     const val actionLogRecentFileName = "action_recent.json"
     const val actionLogStatsFileName = "action_stats.json"
@@ -58,6 +60,9 @@ object LauncherConfig {
     const val appUsagePrefix = "app:"
     val defaultAppSort = AppSort.USAGE
     const val discordPackageName = "com.discord"
+    const val aiQuickActionProviderId = "ai.gemini"
+    const val aiQuickActionPrefix = "qa."
+    const val aiQuickActionPriority = 4
     private const val discordChannelBaseUrl = "https://discord.com/channels"
     val discordShortcuts = listOf(
         DiscordShortcut(

@@ -57,6 +57,7 @@ fun HomeScreen(
     onAppClick: (InstalledApp) -> Unit,
     onAppLongPress: (InstalledApp) -> Unit,
     onOpenDrawer: () -> Unit,
+    onOpenAi: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -98,7 +99,7 @@ fun HomeScreen(
                 Text(text = stringResource(id = R.string.drawer_button))
             }
             Button(
-                onClick = onOpenSettings,
+                onClick = onOpenAi,
                 modifier = Modifier.weight(1f),
                 shape = buttonShape,
                 elevation = primaryButtonElevation

@@ -17,6 +17,7 @@ import com.kafka.launcher.data.local.datastore.settingsDataStore
 import com.kafka.launcher.data.local.db.KafkaDatabase
 import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.data.log.QuickActionAuditLogger
+import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.PinnedAppsRepository
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
     private val actionLogFileWriter by lazy { ActionLogFileWriter(applicationContext) }
     private val geminiStore by lazy { GeminiRecommendationStore(applicationContext) }
     private val geminiApiKeyStore by lazy { GeminiApiKeyStore(applicationContext) }
+    private val quickActionCatalogStore by lazy { QuickActionCatalogStore(applicationContext) }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -62,7 +64,8 @@ class MainActivity : ComponentActivity() {
                     DiscordModule(),
                     BraveModule()
                 ),
-                auditLogger
+                auditLogger,
+                quickActionCatalogStore
             ),
             actionLogRepository = ActionLogRepository(database.actionLogDao(), actionLogFileWriter),
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
@@ -70,12 +73,13 @@ class MainActivity : ComponentActivity() {
             recommendActionsUseCase = RecommendActionsUseCase(),
             navigationInfo = navigationInfo,
             geminiRecommendationStore = geminiStore,
-            geminiApiKeyStore = geminiApiKeyStore
+            geminiApiKeyStore = geminiApiKeyStore,
+            quickActionCatalogStore = quickActionCatalogStore
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }
 
-    private val quickActionExecutor by lazy { QuickActionExecutor(this, auditLogger) }
+    private val quickActionExecutor by lazy { QuickActionExecutor(this, auditLogger, quickActionCatalogStore) }
     private val uninstallLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         launcherViewModel.refreshApps()
     }
@@ -103,7 +107,14 @@ class MainActivity : ComponentActivity() {
                 onDeleteApp = ::uninstallApp,
                 onGeminiApiKeyInputChange = launcherViewModel::onGeminiApiKeyInputChange,
                 onSaveGeminiApiKey = launcherViewModel::saveGeminiApiKey,
-                onClearGeminiApiKey = launcherViewModel::clearGeminiApiKey
+                onClearGeminiApiKey = launcherViewModel::clearGeminiApiKey,
+                onAiRefresh = {
+                    launcherViewModel.onAiSyncRequested()
+                    GeminiWorkScheduler.refreshNow(applicationContext)
+                },
+                onAiAccept = launcherViewModel::acceptAiAction,
+                onAiDismiss = launcherViewModel::dismissAiAction,
+                onAiRestore = launcherViewModel::restoreAiAction
             )
         }
     }
@@ -156,7 +167,11 @@ private fun KafkaLauncherApp(
     onDeleteApp: (String) -> Unit,
     onGeminiApiKeyInputChange: (String) -> Unit,
     onSaveGeminiApiKey: () -> Unit,
-    onClearGeminiApiKey: () -> Unit
+    onClearGeminiApiKey: () -> Unit,
+    onAiRefresh: () -> Unit,
+    onAiAccept: (String) -> Unit,
+    onAiDismiss: (String) -> Unit,
+    onAiRestore: (String) -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -174,7 +189,11 @@ private fun KafkaLauncherApp(
             onDeleteApp = onDeleteApp,
             onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
             onSaveGeminiApiKey = onSaveGeminiApiKey,
-            onClearGeminiApiKey = onClearGeminiApiKey
+            onClearGeminiApiKey = onClearGeminiApiKey,
+            onAiRefresh = onAiRefresh,
+            onAiAccept = onAiAccept,
+            onAiDismiss = onAiDismiss,
+            onAiRestore = onAiRestore
         )
     }
 }

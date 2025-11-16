@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.kafka.launcher.config.GeminiConfig
 import com.kafka.launcher.data.local.db.KafkaDatabase
 import com.kafka.launcher.data.log.ActionLogFileWriter
+import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.remote.GeminiApiClient
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.store.GeminiRecommendationStore
@@ -19,6 +20,7 @@ class GeminiSyncWorker(appContext: Context, params: WorkerParameters) : Coroutin
     private val database by lazy { KafkaDatabase.build(context) }
     private val actionLogRepository by lazy { ActionLogRepository(database.actionLogDao(), ActionLogFileWriter(context)) }
     private val recommendationStore = GeminiRecommendationStore(context)
+    private val quickActionCatalogStore = QuickActionCatalogStore(context)
     private val payloadBuilder = GeminiPayloadBuilder()
     private val apiClient = GeminiApiClient()
     private val apiKeyStore = GeminiApiKeyStore(context)
@@ -46,6 +48,7 @@ class GeminiSyncWorker(appContext: Context, params: WorkerParameters) : Coroutin
         if (recommendations != null) {
             val stamped = recommendations.copy(generatedAt = now.toString())
             recommendationStore.update(stamped)
+            quickActionCatalogStore.mergeFromGemini(stamped.newActions, stamped.generatedAt)
         }
         return Result.success()
     }

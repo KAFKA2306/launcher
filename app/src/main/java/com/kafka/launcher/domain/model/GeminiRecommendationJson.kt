@@ -11,6 +11,7 @@ object GeminiRecommendationJson {
         root.put("globalPins", JSONArray(data.globalPins))
         root.put("suppressions", JSONArray(data.suppressions))
         root.put("rationales", JSONArray().apply { data.rationales.forEach { put(rationaleObject(it)) } })
+        root.put("newActions", JSONArray().apply { data.newActions.forEach { put(actionObject(it)) } })
         return root.toString()
     }
 
@@ -44,12 +45,20 @@ object GeminiRecommendationJson {
                 }
             }
         } ?: emptyList()
+        val newActions = root.optJSONArray("newActions")?.let { array ->
+            buildList<GeminiGeneratedAction> {
+                for (index in 0 until array.length()) {
+                    add(actionFromJson(array.getJSONObject(index)))
+                }
+            }
+        } ?: emptyList()
         return GeminiRecommendations(
             generatedAt = root.optString("generatedAt"),
             windows = windows,
             globalPins = pins,
             suppressions = suppressions,
-            rationales = rationales
+            rationales = rationales,
+            newActions = newActions
         )
     }
 
@@ -67,6 +76,17 @@ object GeminiRecommendationJson {
         val node = JSONObject()
         node.put("targetId", rationale.targetId)
         node.put("summary", rationale.summary)
+        return node
+    }
+
+    private fun actionObject(action: GeminiGeneratedAction): JSONObject {
+        val node = JSONObject()
+        node.put("id", action.id)
+        node.put("label", action.label)
+        node.put("actionType", action.actionType)
+        action.packageName?.let { node.put("packageName", it) }
+        action.data?.let { node.put("data", it) }
+        node.put("timeWindows", JSONArray(action.timeWindows))
         return node
     }
 
@@ -100,6 +120,24 @@ object GeminiRecommendationJson {
         return GeminiRecommendationRationale(
             targetId = node.optString("targetId"),
             summary = node.optString("summary")
+        )
+    }
+
+    private fun actionFromJson(node: JSONObject): GeminiGeneratedAction {
+        val windows = node.optJSONArray("timeWindows")?.let { array ->
+            buildList<String> {
+                for (index in 0 until array.length()) {
+                    add(array.getString(index))
+                }
+            }
+        } ?: emptyList()
+        return GeminiGeneratedAction(
+            id = node.optString("id"),
+            label = node.optString("label"),
+            actionType = node.optString("actionType"),
+            data = node.optString("data").ifBlank { null },
+            packageName = node.optString("packageName").ifBlank { null },
+            timeWindows = windows
         )
     }
 }

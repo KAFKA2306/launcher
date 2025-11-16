@@ -5,7 +5,8 @@ data class GeminiRecommendations(
     val windows: List<GeminiRecommendationWindow> = emptyList(),
     val globalPins: List<String> = emptyList(),
     val suppressions: List<String> = emptyList(),
-    val rationales: List<GeminiRecommendationRationale> = emptyList()
+    val rationales: List<GeminiRecommendationRationale> = emptyList(),
+    val newActions: List<GeminiGeneratedAction> = emptyList()
 )
 
 data class GeminiRecommendationWindow(
@@ -19,4 +20,13 @@ data class GeminiRecommendationWindow(
 data class GeminiRecommendationRationale(
     val targetId: String,
     val summary: String
+)
+
+data class GeminiGeneratedAction(
+    val id: String,
+    val label: String,
+    val actionType: String,
+    val data: String? = null,
+    val packageName: String? = null,
+    val timeWindows: List<String> = emptyList()
 )

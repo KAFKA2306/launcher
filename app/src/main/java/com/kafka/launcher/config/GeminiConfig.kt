@@ -9,6 +9,7 @@ object GeminiConfig {
     const val recommendationDirectory = "config"
     const val recommendationFileName = "gemini_recommendations.json"
     const val workName = "GeminiSync"
+    const val manualWorkName = "GeminiSyncManual"
     const val payloadActionLimit = 4
     const val payloadAppLimit = 4
     const val payloadSequenceLimit = 3
@@ -37,6 +38,21 @@ object GeminiConfig {
             },
             "globalPins":{"type":"array","items":{"type":"string"},"maxItems":6},
             "suppressions":{"type":"array","items":{"type":"string"},"maxItems":6},
+            "newActions":{
+              "type":"array",
+              "items":{
+                "type":"object",
+                "properties":{
+                  "id":{"type":"string"},
+                  "label":{"type":"string"},
+                  "actionType":{"type":"string"},
+                  "packageName":{"type":"string"},
+                  "data":{"type":"string"},
+                  "timeWindows":{"type":"array","items":{"type":"string"}}
+                },
+                "required":["id","label","actionType"]
+              }
+            },
             "rationales":{
               "type":"array",
               "items":{

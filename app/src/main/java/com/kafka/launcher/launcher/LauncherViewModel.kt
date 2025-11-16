@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kafka.launcher.config.GeminiConfig
 import com.kafka.launcher.config.LauncherConfig
+import com.kafka.launcher.data.quickaction.QuickActionCatalog
+import com.kafka.launcher.data.quickaction.QuickActionCatalogEntry
+import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.PinnedAppsRepository
@@ -30,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.text.buildString
 
 class LauncherViewModel(
     private val appRepository: AppRepository,
@@ -40,7 +44,8 @@ class LauncherViewModel(
     private val navigationInfo: NavigationInfo,
     private val pinnedAppsRepository: PinnedAppsRepository,
     private val geminiRecommendationStore: GeminiRecommendationStore,
-    private val geminiApiKeyStore: GeminiApiKeyStore
+    private val geminiApiKeyStore: GeminiApiKeyStore,
+    private val quickActionCatalogStore: QuickActionCatalogStore
 ) : ViewModel() {
 
     private val statsSnapshot = MutableStateFlow<List<ActionStats>>(emptyList())
@@ -51,6 +56,7 @@ class LauncherViewModel(
 
     private var cachedApps: List<InstalledApp> = emptyList()
     private var rawQuickActions: List<QuickAction> = emptyList()
+    private var localAiSuppressed: Set<String> = emptySet()
 
     init {
         _state.update { it.copy(navigationInfo = navigationInfo) }
@@ -60,6 +66,7 @@ class LauncherViewModel(
         observeSettings()
         observePinnedApps()
         observeGeminiRecommendations()
+        observeAiCatalog()
         observeGeminiApiKey()
         loadApps()
         updateFavoriteApps()
@@ -133,6 +140,28 @@ class LauncherViewModel(
         }
     }
 
+    fun acceptAiAction(id: String) {
+        viewModelScope.launch {
+            quickActionCatalogStore.incrementAccepted(id)
+        }
+    }
+
+    fun dismissAiAction(id: String) {
+        viewModelScope.launch {
+            quickActionCatalogStore.incrementDismissed(id)
+        }
+    }
+
+    fun restoreAiAction(id: String) {
+        viewModelScope.launch {
+            quickActionCatalogStore.clearDismissed(id)
+        }
+    }
+
+    fun onAiSyncRequested() {
+        _state.update { it.copy(aiCenter = it.aiCenter.copy(isSyncing = true)) }
+    }
+
     private fun observeQuickActions() {
         viewModelScope.launch {
             quickActionRepository.observe().collect { actions ->
@@ -198,6 +227,20 @@ class LauncherViewModel(
         }
     }
 
+    private fun observeAiCatalog() {
+        viewModelScope.launch {
+            quickActionCatalogStore.data.collect { catalog ->
+                localAiSuppressed = catalog.entries
+                    .asSequence()
+                    .filter { it.dismissedCount > 0L }
+                    .map { it.id }
+                    .toSet()
+                updateAiCenterState(catalog)
+                refreshGeminiOutputs()
+            }
+        }
+    }
+
     private fun loadApps() {
         viewModelScope.launch {
             val apps = appRepository.loadApps()
@@ -211,7 +254,8 @@ class LauncherViewModel(
 
     private fun refreshGeminiOutputs() {
         val snapshot = geminiSnapshot.value
-        val suppressed = snapshot?.suppressions?.toSet() ?: emptySet()
+        val remoteSuppressed = snapshot?.suppressions?.toSet() ?: emptySet()
+        val suppressed = if (localAiSuppressed.isEmpty()) remoteSuppressed else remoteSuppressed + localAiSuppressed
         val filteredQuickActions = filterSuppressed(rawQuickActions, suppressed)
         val (recommendations, windowId) = computeRecommendations(filteredQuickActions, statsSnapshot.value, snapshot)
         val preview = buildAiPreview(snapshot, filteredQuickActions)
@@ -403,6 +447,57 @@ class LauncherViewModel(
             }
         }
         return result
+    }
+
+    private fun updateAiCenterState(catalog: QuickActionCatalog) {
+        val previous = _state.value.aiCenter
+        val syncing = if (previous.isSyncing && catalog.updatedAt.isNotBlank() && catalog.updatedAt != previous.lastUpdated) false else previous.isSyncing
+        val candidates = catalog.entries
+            .asSequence()
+            .filter { it.dismissedCount == 0L && it.acceptedCount == 0L }
+            .map { buildAiActionModel(it) }
+            .toList()
+        val adopted = catalog.entries
+            .asSequence()
+            .filter { it.acceptedCount > 0L && it.dismissedCount == 0L }
+            .map { buildAiActionModel(it) }
+            .toList()
+        val hidden = catalog.entries
+            .asSequence()
+            .filter { it.dismissedCount > 0L }
+            .map { buildAiActionModel(it) }
+            .toList()
+        _state.update {
+            it.copy(
+                aiCenter = AiCenterState(
+                    lastUpdated = catalog.updatedAt,
+                    candidates = candidates,
+                    adopted = adopted,
+                    hidden = hidden,
+                    isSyncing = syncing
+                )
+            )
+        }
+    }
+
+    private fun buildAiActionModel(entry: QuickActionCatalogEntry): AiActionUiModel {
+        val detail = buildString {
+            append(entry.actionType)
+            val target = entry.packageName ?: entry.data
+            if (!target.isNullOrBlank()) {
+                append(" · ")
+                append(target)
+            }
+        }
+        return AiActionUiModel(
+            id = entry.id,
+            label = entry.label,
+            detail = detail,
+            timeWindows = entry.timeWindows,
+            usageCount = entry.usageCount,
+            acceptedCount = entry.acceptedCount,
+            dismissedCount = entry.dismissedCount
+        )
     }
 
     private data class RecommendationResult(
