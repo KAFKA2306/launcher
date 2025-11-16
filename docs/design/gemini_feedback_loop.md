@@ -74,7 +74,7 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 
 ## 画面挙動
 
-- `HomeScreen` の上部は「アプリ一覧 / AIプレビュー / 設定」の 3 ボタン構成で、AI ボタンと設定ボタンはいずれも `SettingsScreen` へ遷移する。
+- `HomeScreen` の上部は「アプリ一覧 / AI / 設定」の 3 ボタン構成で、AI ボタンと設定ボタンはいずれも `SettingsScreen` へ遷移する。
 - `AiRecommendationPreview` カードは設定画面に配置し、`generatedAt` のローカル時刻表示、`window.id`、`primary/fallback` のラベル列、`rationales` の要約を同時に描画し、データが空でも最後のスナップショットを保持する。
 - `QuickActionRow` には Gemini 推薦（`window.primaryActionIds` → 実在する QuickAction から最大 4 件）が表示され、欠損時は `RecommendActionsUseCase` のフォールバックを使用する。
 - `FavoriteAppsRow` は `GeminiRecommendations.globalPins` → `PinnedAppsRepository` → 行動ログ順の優先順位で 5 件を決定する。

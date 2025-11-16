@@ -1,5 +1,6 @@
 package com.kafka.launcher.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -25,11 +27,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.InstalledApp
@@ -58,6 +60,7 @@ fun HomeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(LauncherConfig.homeBackgroundColor))
             .padding(WindowInsets.statusBars.asPaddingValues())
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {

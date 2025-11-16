@@ -25,6 +25,7 @@ object LauncherConfig {
     const val categoryPreviewLimit = 4
     const val bottomQuickActionLimit = 6
     const val homeGridMinHeightDp = 320
+    const val homeBackgroundColor: Long = 0xFFE8F2FF
     const val navigationModeKey = "navigation_mode"
     const val navigationModeGestureValue = 2
     const val navigationModeThreeButtonValue = 0

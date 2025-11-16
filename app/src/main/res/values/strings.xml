@@ -12,7 +12,7 @@
     <string name="recommended_title">おすすめ</string>
     <string name="drawer_button">アプリ一覧</string>
     <string name="settings_button">設定</string>
-    <string name="ai_button">AIプレビュー</string>
+    <string name="ai_button">AI</string>
     <string name="empty_results">候補なし</string>
     <string name="favorites_title">よく使うアプリ</string>
     <string name="recents_title">最近使ったアプリ</string>
