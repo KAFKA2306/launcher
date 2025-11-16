@@ -29,6 +29,7 @@ object LauncherConfig {
     const val navigationModeKey = "navigation_mode"
     const val navigationModeGestureValue = 2
     const val navigationModeThreeButtonValue = 0
+    const val pinnedAppsKey = "pinned_apps"
     val gestureUnsupportedManufacturers = setOf("xiaomi", "redmi", "poco", "blackshark")
     const val appUsagePrefix = "app:"
     val defaultAppSort = AppSort.USAGE

@@ -15,6 +15,10 @@
     <string name="empty_results">候補なし</string>
     <string name="favorites_title">よく使うアプリ</string>
     <string name="recents_title">最近使ったアプリ</string>
+    <string name="app_actions_title">%1$sの操作</string>
+    <string name="app_action_favorite">お気に入りに追加</string>
+    <string name="app_action_unfavorite">お気に入りを解除</string>
+    <string name="app_action_delete">アンインストール</string>
     <string name="search_results_actions">クイックアクション</string>
     <string name="search_results_apps">アプリ</string>
     <string name="drawer_back">ホームに戻る</string>

@@ -1,6 +1,7 @@
 package com.kafka.launcher.ui.drawer
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ fun AppDrawerScreen(
     onSearchQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -85,7 +87,8 @@ fun AppDrawerScreen(
                     apps = apps,
                     categories = state.categorizedApps,
                     showCategories = !isSearching,
-                    onAppClick = onAppClick
+                    onAppClick = onAppClick,
+                    onAppLongPress = onAppLongPress
                 )
             }
         }
@@ -97,13 +100,15 @@ private fun DrawerGridWithCategories(
     apps: List<InstalledApp>,
     categories: Map<AppCategory, List<InstalledApp>>,
     showCategories: Boolean,
-    onAppClick: (InstalledApp) -> Unit
+    onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit
 ) {
     val bottomPadding = if (showCategories && categories.isNotEmpty()) 176.dp else 0.dp
     Box(modifier = Modifier.fillMaxSize()) {
         AppGrid(
             apps = apps,
             onAppClick = onAppClick,
+            onAppLongPress = onAppLongPress,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = bottomPadding)
         )
@@ -111,6 +116,7 @@ private fun DrawerGridWithCategories(
             CategoryOverlay(
                 categories = categories,
                 onAppClick = onAppClick,
+                onAppLongPress = onAppLongPress,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
@@ -124,6 +130,7 @@ private fun DrawerGridWithCategories(
 private fun CategoryOverlay(
     categories: Map<AppCategory, List<InstalledApp>>,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val entries = categories.entries.toList()
@@ -140,7 +147,8 @@ private fun CategoryOverlay(
                     CategoryCard(
                         category = entry.key,
                         apps = entry.value,
-                        onAppClick = onAppClick
+                        onAppClick = onAppClick,
+                        onAppLongPress = onAppLongPress
                     )
                 }
             }
@@ -152,7 +160,8 @@ private fun CategoryOverlay(
 private fun CategoryCard(
     category: AppCategory,
     apps: List<InstalledApp>,
-    onAppClick: (InstalledApp) -> Unit
+    onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -165,21 +174,30 @@ private fun CategoryCard(
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             apps.take(LauncherConfig.categoryPreviewLimit).forEach { app ->
-                CategoryAppChip(app = app, onAppClick = onAppClick)
+                CategoryAppChip(
+                    app = app,
+                    onAppClick = onAppClick,
+                    onAppLongPress = onAppLongPress
+                )
             }
         }
     }
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun CategoryAppChip(
     app: InstalledApp,
-    onAppClick: (InstalledApp) -> Unit
+    onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit
 ) {
     Surface(
         modifier = Modifier
             .widthIn(min = 64.dp)
-            .clickable { onAppClick(app) },
+            .combinedClickable(
+                onClick = { onAppClick(app) },
+                onLongClick = { onAppLongPress(app) }
+            ),
         shape = MaterialTheme.shapes.small,
         tonalElevation = 2.dp
     ) {

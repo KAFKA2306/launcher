@@ -2,6 +2,7 @@ package com.kafka.launcher
 
 import android.app.role.RoleManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,6 +19,7 @@ import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.data.log.QuickActionAuditLogger
 import com.kafka.launcher.data.repo.ActionLogRepository
 import com.kafka.launcher.data.repo.AppRepository
+import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
 import com.kafka.launcher.data.system.NavigationInfoResolver
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity() {
             ),
             actionLogRepository = ActionLogRepository(database.actionLogDao(), actionLogFileWriter),
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
+            pinnedAppsRepository = PinnedAppsRepository(appContext.settingsDataStore),
             recommendActionsUseCase = RecommendActionsUseCase(),
             navigationInfo = navigationInfo
         )
@@ -83,7 +86,10 @@ class MainActivity : ComponentActivity() {
                 onAppClick = { app -> openInstalledApp(app) },
                 onToggleFavorites = launcherViewModel::setShowFavorites,
                 onSortSelected = launcherViewModel::setAppSort,
-                onRequestHomeRole = ::requestHomeRole
+                onRequestHomeRole = ::requestHomeRole,
+                onPinApp = launcherViewModel::pinApp,
+                onUnpinApp = launcherViewModel::unpinApp,
+                onDeleteApp = ::uninstallApp
             )
         }
     }
@@ -99,8 +105,16 @@ class MainActivity : ComponentActivity() {
             addCategory(Intent.CATEGORY_LAUNCHER)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { startActivity(intent) }
+        startActivity(intent)
         launcherViewModel.onAppLaunched(app.packageName)
+    }
+
+    private fun uninstallApp(packageName: String) {
+        val intent = Intent(Intent.ACTION_DELETE).apply {
+            data = Uri.parse("package:$packageName")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 
     private fun requestHomeRole() {
@@ -122,7 +136,10 @@ private fun KafkaLauncherApp(
     onAppClick: (InstalledApp) -> Unit,
     onToggleFavorites: (Boolean) -> Unit,
     onSortSelected: (AppSort) -> Unit,
-    onRequestHomeRole: () -> Unit
+    onRequestHomeRole: () -> Unit,
+    onPinApp: (String) -> Unit,
+    onUnpinApp: (String) -> Unit,
+    onDeleteApp: (String) -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -134,7 +151,10 @@ private fun KafkaLauncherApp(
             onAppClick = onAppClick,
             onToggleFavorites = onToggleFavorites,
             onSortSelected = onSortSelected,
-            onRequestHomeRole = onRequestHomeRole
+            onRequestHomeRole = onRequestHomeRole,
+            onPinApp = onPinApp,
+            onUnpinApp = onUnpinApp,
+            onDeleteApp = onDeleteApp
         )
     }
 }

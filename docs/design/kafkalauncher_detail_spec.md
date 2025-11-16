@@ -150,6 +150,7 @@ enum class AppSort { NAME, USAGE }
 - `filteredApps`（検索結果）
 - `categorizedApps: Map<AppCategory, List<InstalledApp>>`
 - `favoriteApps`
+- `pinnedPackages`
 - `recentApps`
 - `settings`
 - `navigationInfo`
@@ -161,6 +162,7 @@ enum class AppSort { NAME, USAGE }
 - **QuickActionRepository**: 行動定義の監視とフィルタ。`QuickActionIntentFactory`で実行可能性を検証し、Discord Deep Linkを含むすべての行動を端末状態に合わせて絞り込み、ブロードキャスト受信後に即リロード。再計算した一覧は `QuickActionAuditLogger` を通じて `Android/data/com.kafka.launcher/files/logs/quickactions_snapshot.txt` へ書き出す。
 - **ActionLogRepository**: 実行ログ書き込み、利用頻度算出。ログ群は `logs_manifest.json` と `logs_bundle.zip` にまとめ、PC 側は `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認しつつ `toybox cp` で `Download` へ複製してから `adb pull` する。
 - **SettingsRepository**: DataStore から `Settings` Flow を提供
+- **PinnedAppsRepository**: 長押しで登録したお気に入りアプリのパッケージ名集合を DataStore に保存/監視
 
 ---
 
@@ -175,7 +177,8 @@ enum class AppSort { NAME, USAGE }
 - 下段（常に画面の 60% 以上を占有）：
   - `BottomLauncherPanel` は `Box` で下端に貼り付けた `LazyColumn` とし、`navigationBarsPadding()` を必ず適用して 3 ボタンと重ならないようにする。
   - セクション順序は `SearchBar` → `SearchResults or RecommendedRow` → `RecentAppsRow` → `FavoriteAppsRow` → `QuickActionRow` → `AppGrid` を `item` として並べる。
-  - `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`height = homeGridMinHeight` で常に有限高さに収め、グリッド内部のスクロールにすべて委ねる。
+- `AppGrid` は `GridCells.Fixed(LauncherConfig.appsPerRow)` で 8 列固定。`height = homeGridMinHeight` で常に有限高さに収め、グリッド内部のスクロールにすべて委ねる。
+- 各アプリアイコンは長押しでお気に入り登録/解除とアンインストールを選べるコンテキストダイアログを開く。
   - 見出しとアクションはすべて下段 `LazyColumn` 内で完結させ、二重スクロールを発生させない。
 
 ## 3.2 アプリドロワー
@@ -189,11 +192,13 @@ enum class AppSort { NAME, USAGE }
 - 見出しは `strings.xml` の `categories_title`。
 - `LazyRow` で `AppCategory` ごとのカードを並べ、各カードには最大 `LauncherConfig.categoryPreviewLimit` 個のアイコンを表示。`AppGrid` と同じ `AppIcon` を再利用。
 - カードをタップすると最初のアプリで即起動する。より細かい選択は上の 8 列グリッドで行うためモックアップ禁止。
+- カード内アイコンの長押しでもホームと同じダイアログを表示し、操作を統一する。
 
 ## 3.4 よく使う / 最近の領域
 
 - `LauncherConfig.favoritesLimit` をホーム下段での「よく使う」枠数に使う。
 - `LauncherConfig.recentLimit` を使い `ActionLogRepository.recent` の結果から最近起動アプリを抽出し、`FavoriteAppsRow` を流用して表示する。
+- よく使う列には長押しで登録したアプリを優先し、不足分を使用統計で補完する。
 - 検索やレコメンドと同じく、この領域も `BottomLauncherPanel` 内で下寄せ配置し、スクロールせずとも 3〜5 件は常に見えるよう `Spacer` を抑制する。
 
 ---
@@ -208,6 +213,7 @@ enum class AppSort { NAME, USAGE }
 ## 4.2 DataStore
 
 - `showFavorites` と `appSort` を Preferences DataStore に保存。
+- 長押しで登録したお気に入りパッケージ集合も Preferences DataStore に保持。
 - ホーム画面の左下領域は `showFavorites=false` の場合でも空き枠を確保する。
 
 ## 4.3 LauncherConfig

@@ -1,5 +1,7 @@
 package com.kafka.launcher.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,9 +23,11 @@ import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.domain.model.InstalledApp
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun AppGrid(
     apps: List<InstalledApp>,
     onAppClick: (InstalledApp) -> Unit,
+    onAppLongPress: (InstalledApp) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -35,17 +39,27 @@ fun AppGrid(
         contentPadding = contentPadding
     ) {
         items(apps, key = { it.componentName.flattenToString() }) { app ->
-            AppTile(app = app, onClick = { onAppClick(app) })
+            AppTile(
+                app = app,
+                onClick = { onAppClick(app) },
+                onLongClick = { onAppLongPress(app) }
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun AppTile(app: InstalledApp, onClick: () -> Unit) {
-    Surface(onClick = onClick) {
+private fun AppTile(app: InstalledApp, onClick: () -> Unit, onLongClick: () -> Unit) {
+    Surface {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                )
+                .padding(8.dp)
         ) {
             AppIcon(app = app, size = 40.dp)
             Spacer(modifier = Modifier.height(8.dp))
