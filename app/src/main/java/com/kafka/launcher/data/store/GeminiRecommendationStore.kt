@@ -10,6 +10,7 @@ import com.kafka.launcher.config.GeminiConfig
 import com.kafka.launcher.domain.model.GeminiRecommendationJson
 import com.kafka.launcher.domain.model.GeminiRecommendations
 import java.io.File
+import okio.Path.Companion.toPath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -21,7 +22,7 @@ class GeminiRecommendationStore(context: Context) {
         produceFile = {
             val directory = File(appContext.filesDir, GeminiConfig.recommendationDirectory)
             directory.mkdirs()
-            directory.resolve(GeminiConfig.recommendationFileName).toPath()
+            directory.resolve(GeminiConfig.recommendationFileName).absolutePath.toPath()
         }
     )
 

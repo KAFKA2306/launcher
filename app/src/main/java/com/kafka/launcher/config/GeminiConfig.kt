@@ -17,10 +17,47 @@ object GeminiConfig {
     const val aiPreviewWindowLimit = 4
     const val aiPreviewRationaleLimit = 6
     val networkType: NetworkType = NetworkType.UNMETERED
-    private val responseSchema = """{""" +
-        "\"type\":\"object\",\"properties\":{\"timeWindows\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"windowId\":{\"type\":\"string\"},\"primaryActionIds\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"maxItems\":4},\"fallbackActionIds\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"maxItems\":4}},\"required\":[\"windowId\",\"primaryActionIds\"]}},\"globalPins\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"maxItems\":6},\"suppressions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"maxItems\":6},\"rationales\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"targetId\":{\"type\":\"string\"},\"summary\":{\"type\":\"string\"}},\"required\":[\"targetId\",\"summary\"]}}},\"required\":[\"timeWindows\"]}""".trimIndent()
-    val generationConfig = """{""" +
-        "\"temperature\":0.3,\"topP\":0.95,\"responseMimeType\":\"application/json\",\"responseSchema\":$responseSchema}""".trimIndent()
+    private val responseSchema = """
+        {
+          "type":"object",
+          "properties":{
+            "timeWindows":{
+              "type":"array",
+              "items":{
+                "type":"object",
+                "properties":{
+                  "windowId":{"type":"string"},
+                  "primaryActionIds":{"type":"array","items":{"type":"string"},"maxItems":4},
+                  "fallbackActionIds":{"type":"array","items":{"type":"string"},"maxItems":4}
+                },
+                "required":["windowId","primaryActionIds"]
+              }
+            },
+            "globalPins":{"type":"array","items":{"type":"string"},"maxItems":6},
+            "suppressions":{"type":"array","items":{"type":"string"},"maxItems":6},
+            "rationales":{
+              "type":"array",
+              "items":{
+                "type":"object",
+                "properties":{
+                  "targetId":{"type":"string"},
+                  "summary":{"type":"string"}
+                },
+                "required":["targetId","summary"]
+              }
+            }
+          },
+          "required":["timeWindows"]
+        }
+    """.trimIndent().replace("\\s+".toRegex(), "")
+    val generationConfig = """
+        {
+          "temperature":0.3,
+          "topP":0.95,
+          "responseMimeType":"application/json",
+          "responseSchema":$responseSchema
+        }
+    """.trimIndent().replace("\\s+".toRegex(), "")
     val timeWindows = listOf(
         TimeWindowDefinition(id = "weekday_morning", startHour = 5, startMinute = 0, endHour = 10, endMinute = 0, appliesToWeekdays = true, appliesToWeekends = false),
         TimeWindowDefinition(id = "weekday_daytime", startHour = 10, startMinute = 0, endHour = 18, endMinute = 0, appliesToWeekdays = true, appliesToWeekends = false),

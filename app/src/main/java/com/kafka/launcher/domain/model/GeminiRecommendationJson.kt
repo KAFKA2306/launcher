@@ -17,28 +17,28 @@ object GeminiRecommendationJson {
     fun decode(json: String): GeminiRecommendations {
         val root = JSONObject(json)
         val windows = root.optJSONArray("windows")?.let { array ->
-            buildList {
+            buildList<GeminiRecommendationWindow> {
                 for (index in 0 until array.length()) {
                     add(windowFromJson(array.getJSONObject(index)))
                 }
             }
         } ?: emptyList()
         val pins = root.optJSONArray("globalPins")?.let { array ->
-            buildList {
+            buildList<String> {
                 for (index in 0 until array.length()) {
                     add(array.getString(index))
                 }
             }
         } ?: emptyList()
         val suppressions = root.optJSONArray("suppressions")?.let { array ->
-            buildList {
+            buildList<String> {
                 for (index in 0 until array.length()) {
                     add(array.getString(index))
                 }
             }
         } ?: emptyList()
         val rationales = root.optJSONArray("rationales")?.let { array ->
-            buildList {
+            buildList<GeminiRecommendationRationale> {
                 for (index in 0 until array.length()) {
                     add(rationaleFromJson(array.getJSONObject(index)))
                 }
@@ -72,23 +72,25 @@ object GeminiRecommendationJson {
 
     private fun windowFromJson(node: JSONObject): GeminiRecommendationWindow {
         val primary = node.optJSONArray("primaryActionIds")?.let { array ->
-            buildList {
+            buildList<String> {
                 for (index in 0 until array.length()) {
                     add(array.getString(index))
                 }
             }
         } ?: emptyList()
         val fallback = node.optJSONArray("fallbackActionIds")?.let { array ->
-            buildList {
+            buildList<String> {
                 for (index in 0 until array.length()) {
                     add(array.getString(index))
                 }
             }
         } ?: emptyList()
+        val start = node.optString("start").ifBlank { null }
+        val end = node.optString("end").ifBlank { null }
         return GeminiRecommendationWindow(
             id = node.optString("id"),
-            start = node.optString("start", null),
-            end = node.optString("end", null),
+            start = start,
+            end = end,
             primaryActionIds = primary,
             fallbackActionIds = fallback
         )
