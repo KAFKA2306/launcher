@@ -5,16 +5,19 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val geminiApiKey = (project.findProperty("GEMINI_API_KEY") as? String) ?: ""
+
 android {
     namespace = "com.kafka.launcher"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.kafka.launcher"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        resValue("string", "gemini_api_key", geminiApiKey)
     }
 
     buildTypes {
@@ -51,7 +54,7 @@ android {
         buildConfig = false
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.5"
+        kotlinCompilerExtensionVersion = libs.versions.kotlin.get()
     }
     androidResources {
         localeFilters += setOf("ja", "en")
@@ -86,6 +89,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.okhttp)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

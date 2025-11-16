@@ -34,6 +34,7 @@ import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.NavigationMode
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.launcher.LauncherState
+import com.kafka.launcher.ui.components.AiRecommendationPreview
 import com.kafka.launcher.ui.components.AppGrid
 import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
@@ -53,6 +54,7 @@ fun HomeScreen(
     navigationInfo: NavigationInfo,
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
+    onToggleAiPreview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dockQuickActions = state.quickActions.take(LauncherConfig.bottomQuickActionLimit)
@@ -77,6 +79,14 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(text = stringResource(id = R.string.drawer_button))
             }
+            Button(onClick = onToggleAiPreview, modifier = Modifier.weight(1f)) {
+                Icon(
+                    painter = painterResource(id = LauncherIcons.Ai),
+                    contentDescription = stringResource(id = R.string.ai_button)
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(text = stringResource(id = R.string.ai_button))
+            }
             Button(onClick = onOpenSettings, modifier = Modifier.weight(1f)) {
                 Text(text = stringResource(id = R.string.settings_button))
             }
@@ -85,6 +95,10 @@ fun HomeScreen(
         if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
             NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(16.dp))
+        }
+        AiRecommendationPreview(state = state.aiPreview)
+        if (state.aiPreview.isExpanded) {
+            Spacer(modifier = Modifier.height(12.dp))
         }
         BottomLauncherPanel(
             state = state,

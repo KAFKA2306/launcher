@@ -1,0 +1,48 @@
+package com.kafka.launcher.launcher.worker
+
+import android.content.Context
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.kafka.launcher.R
+import com.kafka.launcher.config.GeminiConfig
+import com.kafka.launcher.data.local.db.KafkaDatabase
+import com.kafka.launcher.data.log.ActionLogFileWriter
+import com.kafka.launcher.data.remote.GeminiApiClient
+import com.kafka.launcher.data.repo.ActionLogRepository
+import com.kafka.launcher.data.store.GeminiRecommendationStore
+import com.kafka.launcher.domain.usecase.GeminiPayloadBuilder
+import java.time.Duration
+import java.time.Instant
+
+class GeminiSyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+    private val context = appContext.applicationContext
+    private val database by lazy { KafkaDatabase.build(context) }
+    private val actionLogRepository by lazy { ActionLogRepository(database.actionLogDao(), ActionLogFileWriter(context)) }
+    private val recommendationStore = GeminiRecommendationStore(context)
+    private val payloadBuilder = GeminiPayloadBuilder()
+    private val apiClient = GeminiApiClient()
+
+    override suspend fun doWork(): Result {
+        val last = recommendationStore.snapshot()
+        val now = Instant.now()
+        if (last != null && last.generatedAt.isNotBlank()) {
+            val lastInstant = Instant.parse(last.generatedAt)
+            if (Duration.between(lastInstant, now).toHours() < GeminiConfig.periodHours) {
+                return Result.success()
+            }
+        }
+        val events = actionLogRepository.exportEvents(GeminiConfig.payloadEventLimit)
+        val stats = actionLogRepository.statsSnapshot(GeminiConfig.payloadEventLimit)
+        if (events.isEmpty() && stats.isEmpty()) {
+            return Result.success()
+        }
+        val payload = payloadBuilder.build(events, stats)
+        val apiKey = context.getString(R.string.gemini_api_key)
+        val recommendations = apiClient.fetchRecommendations(payload, apiKey)
+        if (recommendations != null) {
+            val stamped = recommendations.copy(generatedAt = now.toString())
+            recommendationStore.update(stamped)
+        }
+        return Result.success()
+    }
+}

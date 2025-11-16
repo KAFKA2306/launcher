@@ -12,6 +12,7 @@
     <string name="recommended_title">おすすめ</string>
     <string name="drawer_button">アプリ一覧</string>
     <string name="settings_button">設定</string>
+    <string name="ai_button">AIプレビュー</string>
     <string name="empty_results">候補なし</string>
     <string name="favorites_title">よく使うアプリ</string>
     <string name="recents_title">最近使ったアプリ</string>
@@ -35,4 +36,12 @@
     <string name="category_games">ゲーム</string>
     <string name="category_tools">ツール</string>
     <string name="category_other">その他</string>
+    <string name="ai_preview_title">Gemini プレビュー</string>
+    <string name="ai_preview_updated_at">最終更新: %1$s</string>
+    <string name="ai_preview_empty">Gemini 推薦はまだありません</string>
+    <string name="ai_preview_primary_label">推奨: %1$s</string>
+    <string name="ai_preview_fallback_label">控え: %1$s</string>
+    <string name="ai_preview_rationale_title">理由</string>
+    <string name="settings_gemini_last_synced">Gemini 最終更新: %1$s</string>
+    <string name="settings_gemini_never">Gemini 推薦は未生成</string>
 </resources>

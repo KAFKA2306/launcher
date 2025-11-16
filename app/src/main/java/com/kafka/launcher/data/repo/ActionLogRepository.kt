@@ -1,5 +1,6 @@
 package com.kafka.launcher.data.repo
 
+import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.data.local.db.ActionLogDao
 import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.domain.model.ActionLog
@@ -26,5 +27,13 @@ class ActionLogRepository(
         val stats = entries.map { ActionStats(it.actionId, it.count) }
         fileWriter.writeStats(stats)
         stats
+    }
+
+    suspend fun exportEvents(limit: Int = LauncherConfig.statsLimit): List<ActionLog> {
+        return dao.recentSnapshot(limit)
+    }
+
+    suspend fun statsSnapshot(limit: Int = LauncherConfig.statsLimit): List<ActionStats> {
+        return dao.statsSnapshot(limit).map { ActionStats(it.actionId, it.count) }
     }
 }

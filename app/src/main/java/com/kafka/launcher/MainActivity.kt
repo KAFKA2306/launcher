@@ -2,7 +2,6 @@ package com.kafka.launcher
 
 import android.app.role.RoleManager
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,6 +22,7 @@ import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.data.store.GeminiRecommendationStore
 import com.kafka.launcher.data.system.NavigationInfoResolver
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
@@ -31,6 +32,7 @@ import com.kafka.launcher.launcher.LauncherNavHost
 import com.kafka.launcher.launcher.LauncherState
 import com.kafka.launcher.launcher.LauncherViewModel
 import com.kafka.launcher.launcher.LauncherViewModelFactory
+import com.kafka.launcher.launcher.worker.GeminiWorkScheduler
 import com.kafka.launcher.quickactions.BraveModule
 import com.kafka.launcher.quickactions.DiscordModule
 import com.kafka.launcher.quickactions.GmailModule
@@ -42,6 +44,7 @@ import com.kafka.launcher.ui.theme.KafkaLauncherTheme
 class MainActivity : ComponentActivity() {
     private val auditLogger by lazy { QuickActionAuditLogger(applicationContext) }
     private val actionLogFileWriter by lazy { ActionLogFileWriter(applicationContext) }
+    private val geminiStore by lazy { GeminiRecommendationStore(applicationContext) }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -63,7 +66,8 @@ class MainActivity : ComponentActivity() {
             settingsRepository = SettingsRepository(appContext.settingsDataStore),
             pinnedAppsRepository = PinnedAppsRepository(appContext.settingsDataStore),
             recommendActionsUseCase = RecommendActionsUseCase(),
-            navigationInfo = navigationInfo
+            navigationInfo = navigationInfo,
+            geminiRecommendationStore = geminiStore
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }
@@ -75,6 +79,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         requestHomeRole()
+        GeminiWorkScheduler.schedule(applicationContext)
         setContent {
             val state by launcherViewModel.state.collectAsStateWithLifecycle()
             KafkaLauncherApp(
@@ -89,7 +94,8 @@ class MainActivity : ComponentActivity() {
                 onRequestHomeRole = ::requestHomeRole,
                 onPinApp = launcherViewModel::pinApp,
                 onUnpinApp = launcherViewModel::unpinApp,
-                onDeleteApp = ::uninstallApp
+                onDeleteApp = ::uninstallApp,
+                onToggleAiPreview = launcherViewModel::toggleAiPreview
             )
         }
     }
@@ -111,7 +117,7 @@ class MainActivity : ComponentActivity() {
 
     private fun uninstallApp(packageName: String) {
         val intent = Intent(Intent.ACTION_DELETE).apply {
-            data = Uri.parse("package:$packageName")
+            data = ("package:$packageName").toUri()
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
@@ -139,7 +145,8 @@ private fun KafkaLauncherApp(
     onRequestHomeRole: () -> Unit,
     onPinApp: (String) -> Unit,
     onUnpinApp: (String) -> Unit,
-    onDeleteApp: (String) -> Unit
+    onDeleteApp: (String) -> Unit,
+    onToggleAiPreview: () -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -154,7 +161,8 @@ private fun KafkaLauncherApp(
             onRequestHomeRole = onRequestHomeRole,
             onPinApp = onPinApp,
             onUnpinApp = onUnpinApp,
-            onDeleteApp = onDeleteApp
+            onDeleteApp = onDeleteApp,
+            onToggleAiPreview = onToggleAiPreview
         )
     }
 }

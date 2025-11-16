@@ -25,8 +25,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
 - DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、`ActionLogRepository` の `stats` に基づく使用頻度上位を組み合わせます。
-- 最下段でアプリドロワー / 設定ボタンを横並びに配置。`AiRecommendationPreviewButton` / `AiRecommendationPreview` / `GeminiRecommendationStore` は設計済みだが未実装であり、現行ビルドでは通常の 2 ボタン構成のみが動作する。ホーム画面の AI スロットは `docs/design/gemini_feedback_loop.md` に記述された仕様段階の内容である点を明示する。`NavigationNotice` は 3 ボタン判定時にクッションとして表示。
-- AIおすすめプレビューの挙動は `LauncherState.aiPreview` を用いて `gemini-2.5-pro-exp` の `windows.primaryActionIds` / `globalPins` / `rationales` をホームで確認する計画だが、端末内での保存・描画は未実装。README では将来の UI 変化を理解するための仕様メモとして残している。
+- 最下段でアプリ一覧 / AI プレビュー / 設定の 3 ボタンを横並びに配置。AI ボタンは `LauncherViewModel.toggleAiPreview()` で `AiRecommendationPreview` を開閉し、`NavigationNotice` は 3 ボタン判定時のみ表示する。
+- `AiRecommendationPreview` は `GeminiRecommendationStore` の `globalPins` `windows` `rationales` をそのまま描画し、Gemini の最終更新時刻をローカル時刻で表示する。QuickAction おすすめとお気に入り行も同じストアからのデータを優先的に採用する。
 
 ### 1.2 アプリドロワー
 
@@ -100,8 +100,8 @@ app/src/main/java/com/kafka/launcher
 └─ ui/(home|drawer|settings|components)/...
 ```
 
-- `LauncherViewModel` が AppRepository/QuickActionRepository/SettingsRepository/ActionLogRepository を監視し、`LauncherState` に統合。
-- `RecommendActionsUseCase` は `ActionStats` と QuickAction 一覧から一致する ID だけを抽出し、使用履歴が存在しない場合は空配列となる。
+- `LauncherViewModel` が AppRepository / QuickActionRepository / SettingsRepository / ActionLogRepository / `GeminiRecommendationStore` を監視し、Gemini 推薦とローカル統計をまとめて `LauncherState` に統合。
+- `RecommendActionsUseCase` は `ActionStats` と QuickAction 一覧から一致する ID だけを抽出し、Gemini 推薦が空のときのフォールバックとして利用する。
 - `NavigationInfoResolver` が `Settings.Secure.navigation_mode` と OEM 名でジェスチャー可否を判定。
 - `LauncherConfig` は推奨アイテム数や Discord Deep Link を集中管理。
 
@@ -113,9 +113,9 @@ app/src/main/java/com/kafka/launcher
 
 ## 4. 既知の制約
 
-- ホーム/ドロワーの UI は縦スクロールのみ。カテゴリ別表示はアイデア段階で詳細モックアップはなく、アプリ長押しのピン留めやアクションシートも未実装。
+- ホーム/ドロワーの UI は縦スクロールのみでウィジェット領域やレイアウト切り替えは未対応。
 - Theme 切り替えやアイコンサイズ設定はまだ備えていない。設定画面はお気に入り表示とソート切り替えのみ。
-- LLM 連携や通知リスナー等の機能は含まれていない。必要な情報は前述のログ出力で取得する。
+- LLM 連携は Gemini 推薦のみに限定しており、通知リスナーや外部サービスへのリアルタイム連携は含まれていない。
 
 ## 5. 参考コマンド
 

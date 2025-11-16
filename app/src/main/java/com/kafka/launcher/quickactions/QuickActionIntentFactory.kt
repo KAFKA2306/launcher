@@ -2,8 +2,8 @@ package com.kafka.launcher.quickactions
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.provider.CalendarContract
+import androidx.core.net.toUri
 import com.kafka.launcher.domain.model.ActionType
 import com.kafka.launcher.domain.model.QuickAction
 
@@ -32,13 +32,13 @@ class QuickActionIntentFactory(private val context: Context) {
 
     private fun openUri(base: String?, query: String, packageName: String?): Intent? {
         if (base.isNullOrBlank()) return null
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(base + query)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = Intent(Intent.ACTION_VIEW, (base + query).toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return preferPackage(intent, packageName)
     }
 
     private fun openUrl(url: String, packageName: String?): Intent? {
         if (url.isBlank()) return null
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return preferPackage(intent, packageName)
     }
 
@@ -53,7 +53,7 @@ class QuickActionIntentFactory(private val context: Context) {
     }
 
     private fun composeEmail(packageName: String?): Intent? {
-        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return preferPackage(intent, packageName)
     }
 

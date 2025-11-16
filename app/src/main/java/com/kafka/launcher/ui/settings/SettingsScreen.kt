@@ -8,10 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -40,6 +41,7 @@ fun SettingsScreen(
     onSortSelected: (AppSort) -> Unit,
     onBack: () -> Unit,
     onRequestHomeRole: () -> Unit,
+    recommendationTimestamp: String?,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -88,8 +90,22 @@ fun SettingsScreen(
                     Text(text = stringResource(id = R.string.request_home_role))
                 }
             }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(text = stringResource(id = R.string.ai_preview_title))
+                val geminiText = recommendationTimestamp?.takeIf { it.isNotBlank() }?.let { timestamp ->
+                    stringResource(id = R.string.settings_gemini_last_synced, formatGeminiTimestamp(timestamp))
+                } ?: stringResource(id = R.string.settings_gemini_never)
+                Text(text = geminiText, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
+}
+
+private fun formatGeminiTimestamp(value: String): String {
+    val instant = java.time.Instant.parse(value)
+    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+    val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
+    return formatter.format(zoned)
 }
 
 @Composable

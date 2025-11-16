@@ -8,4 +8,5 @@ object LauncherIcons {
     @DrawableRes val Search = R.drawable.ic_search
     @DrawableRes val Clear = R.drawable.ic_clear
     @DrawableRes val Drawer = R.drawable.ic_expand_less
+    @DrawableRes val Ai = R.drawable.ic_auto_awesome
 }

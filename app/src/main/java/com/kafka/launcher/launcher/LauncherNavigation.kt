@@ -37,6 +37,7 @@ fun LauncherNavHost(
     onPinApp: (String) -> Unit,
     onUnpinApp: (String) -> Unit,
     onDeleteApp: (String) -> Unit,
+    onToggleAiPreview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -57,7 +58,8 @@ fun LauncherNavHost(
                 onAppLongPress = { selectedApp = it },
                 navigationInfo = state.navigationInfo,
                 onOpenDrawer = { navController.navigate(LauncherDestinations.DRAWER) },
-                onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) }
+                onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) },
+                onToggleAiPreview = onToggleAiPreview
             )
         }
         composable(LauncherDestinations.DRAWER) {
@@ -77,7 +79,8 @@ fun LauncherNavHost(
                 onToggleFavorites = onToggleFavorites,
                 onSortSelected = onSortSelected,
                 onBack = { navController.popBackStack() },
-                onRequestHomeRole = onRequestHomeRole
+                onRequestHomeRole = onRequestHomeRole,
+                recommendationTimestamp = state.recommendationTimestamp
             )
         }
     }

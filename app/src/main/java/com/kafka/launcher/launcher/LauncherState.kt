@@ -19,5 +19,28 @@ data class LauncherState(
     val pinnedPackages: Set<String> = emptySet(),
     val settings: Settings = Settings(),
     val navigationInfo: NavigationInfo = NavigationInfo(),
+    val geminiPins: List<String> = emptyList(),
+    val suppressedActionIds: Set<String> = emptySet(),
+    val recommendationTimestamp: String? = null,
+    val currentTimeWindowId: String? = null,
+    val aiPreview: AiPreviewState = AiPreviewState(),
     val isLoading: Boolean = true
+)
+
+data class AiPreviewState(
+    val generatedAt: String = "",
+    val windows: List<AiPreviewWindow> = emptyList(),
+    val rationales: List<AiPreviewRationale> = emptyList(),
+    val isExpanded: Boolean = false
+)
+
+data class AiPreviewWindow(
+    val id: String,
+    val primary: List<String>,
+    val fallback: List<String>
+)
+
+data class AiPreviewRationale(
+    val target: String,
+    val summary: String
 )

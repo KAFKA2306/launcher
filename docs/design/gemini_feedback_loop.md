@@ -1,38 +1,38 @@
 # Gemini フィードバックループ仕様
 
-KafkaLauncher は端末内ログを 3 時間単位で Gemini Pro 2.5 preview に送り、Gemini の推薦で `QuickActionRow` `FavoriteAppsRow` `AiRecommendationPreview` を差し替える構成を目指す。本仕様は Android 内だけで完結する最小フィードバックループを定義し、`GeminiSyncWorker` `GeminiPayloadBuilder` `GeminiRecommendationStore` `AiRecommendationPreview` などはまだ実装されていないことを明記する。
+KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ送り、Structured Output の推薦を `QuickActionRow` `FavoriteAppsRow` `AiRecommendationPreview` に反映する。`GeminiSyncWorker` `GeminiPayloadBuilder` `GeminiRecommendationStore` `AiRecommendationPreview` を含む最小構成を実装済みであり、端末内で完結したループを保持する。
 
 ## 目的と実装状況
 
-- app/src 以下に Gemini 連携用 Worker / Store / ViewModel 拡張 / Compose UI は存在しない。
-- `GeminiSyncWorker` `GeminiPayloadBuilder` `GeminiRecommendationStore` `AiRecommendationPreview` は本仕様でのみ定義された概念であり、現行ビルドは Gemini 呼び出しやプレビュー UI を含まない。
-- 設計変更時は README と本ドキュメントを同時更新し、未実装ステータスを保つ。
+- `GeminiWorkScheduler` がアプリ起動時と端末ブート後に `GeminiSyncWorker` を登録し、3 時間周期の WorkManager を維持する。
+- `LauncherInitReceiver` が `BOOT_COMPLETED` を受信し、端末再起動後も Gemini 同期を自動復旧する。
+- `LauncherViewModel` は `GeminiRecommendationStore` の Flow を取り込み、QuickAction/Favorite/UI 状態を常時更新する。
+- `AiRecommendationPreviewButton` とカード UI は `HomeScreen` に常駐し、Gemini の最終更新時刻と内容を表示する。
 
 ## 最小構成
 
 | レイヤー | 役割 | 主要 API |
 | --- | --- | --- |
-| config | `GeminiConfig` に周期・エンドポイント・モデル名・DataStore パスを集約。 | `GeminiConfig(periodHours=3, endpoint=..., model=..., storePath=...)` |
-| data | `ActionLogRepository` からイベント/統計、`QuickActionAuditLogger` から成功率を読み出す。 | `exportEvents()` `stats()` `snapshot()` |
-| worker | `GeminiSyncWorker` が `WorkManager` 周期登録と `GeminiPayloadBuilder` を直列で実行。 | `PeriodicWorkRequestBuilder` |
-| remote | `GeminiApiClient` が `OkHttpClient` POST を 1 回だけ送信。 | `generateContent` |
-| store | `GeminiRecommendationStore` が `DataStore<Preferences>` で `/files/config/gemini_recommendations.json` を単一ソースにする。 | `observe()` `update()` |
-| ui | `LauncherViewModel` が Flow を集約し `LauncherState` に反映。 | `LauncherState.recommendedActions` |
-
-上記の役割以外の新規コンポーネントは追加しない。周期やモデル名などの設定値はすべて `GeminiConfig` から取得し、ハードコーディングを避ける。
+| config | `GeminiConfig` に周期・エンドポイント・モデル名・生成設定・DataStore パス・WorkName を集約。 | `GeminiConfig.periodHours` `GeminiConfig.endpoint` |
+| data | `ActionLogRepository` が DAO/ファイル、`GeminiRecommendationStore` が DataStore JSON を提供。 | `exportEvents(limit)` `statsSnapshot(limit)` `GeminiRecommendationStore.data` |
+| domain | `GeminiPayloadBuilder` が UTC 正規化と JSON 生成、`RecommendActionsUseCase` がフォールバックを返す。 | `build(events, stats)` |
+| worker | `GeminiSyncWorker` が `WorkManager` から実行され、Payload 生成→API 呼び出し→ストア更新を直列化。 | `doWork()` |
+| remote | `GeminiApiClient` が `OkHttpClient` で 1 回の POST を送信し Structured Output を解析。 | `fetchRecommendations(payload, apiKey)` |
+| store | `GeminiRecommendationStore` が `/files/config/gemini_recommendations.json` を DataStore<Preferences> で保持。 | `data: Flow<GeminiRecommendations?>` `update(snapshot)` |
+| launcher | `LauncherViewModel` が quick actions / stats / Gemini Flow を集約し UI state に落とし込む。 | `refreshGeminiOutputs()` |
+| ui | `HomeScreen` の 3 ボタン行と `AiRecommendationPreview` が Gemini 状態を描画。 | `AiRecommendationPreview(state)` |
 
 ## 周期とトリガー
 
-1. `GeminiSyncWorker` を `PeriodicWorkRequestBuilder`（3 時間、`NetworkType.UNMETERED`）で登録する。周期は `GeminiConfig.periodHours` を使用する。
-2. 端末ブート時に `LauncherInitReceiver` が `WorkManager` 再登録を行い、外部トリガー不要でループを継続。
-3. Worker は `ActionLogRepository.lastGeminiUpdate` を読み、直近 3 時間以内ならスキップフラグを返し即終了する。
+1. `GeminiWorkScheduler.schedule(context)` が `PeriodicWorkRequestBuilder<GeminiSyncWorker>` を `ExistingPeriodicWorkPolicy.UPDATE` で登録する。周期は `GeminiConfig.periodHours`、ネットワーク条件は `GeminiConfig.networkType` (`UNMETERED`) を使用する。
+2. `LauncherInitReceiver` は `BOOT_COMPLETED` 受信時に同スケジューラを呼び出し、ユーザー操作なしでループを再開する。
+3. Worker は `GeminiRecommendationStore.snapshot()` を読み、`generatedAt` との差分が 3 時間未満なら早期に `Result.success()` を返す。
 
 ## 前処理
 
-1. Worker が `ActionLogRepository.exportEvents()` と `ActionLogRepository.stats()` を UTC に正規化して読み込む。
-2. `GeminiPayloadBuilder` が一日を `weekday_morning (05-10)` `weekday_daytime (10-18)` `weekday_night (18-05)` `weekend_daytime (08-20)` `weekend_night (20-08)` の 5 つに分割し、使用回数・最近シーケンス・平均インターバルを算出する。
-3. `QuickActionAuditLogger.snapshot()` の成功/失敗統計を突き合わせて `successRate` を補完する。
-4. Builder は JSON を文字列化し、HTTP Body にそのまま渡せる `payload.json` を生成する。
+1. `ActionLogRepository.exportEvents(GeminiConfig.payloadEventLimit)` と `statsSnapshot` が Room から直近ログと統計を読み込む。値は UTC に正規化して `GeminiPayloadBuilder` に渡す。
+2. `GeminiPayloadBuilder` は `GeminiConfig.timeWindows`（weekday/weekend × morning/daytime/night）の定義を用い、各ウィンドウごとに `topActions` `topApps` `recentActionSequence` を JSON 化する。ログが空の場合は `statsSnapshot` の上位レコードをフォールバックとして挿入する。
+3. 出力 JSON は `timeWindowStats` と `recentAnomalies`（実装では空配列）を含む `payload.json` 相当の文字列となり、HTTP Body に直接渡す。
 
 `payload.json` 例:
 
@@ -43,7 +43,7 @@ KafkaLauncher は端末内ログを 3 時間単位で Gemini Pro 2.5 preview に
       "windowId": "weekday_morning",
       "topActions": [
         {"id": "discord_dm", "count": 34, "successRate": 1.0},
-        {"id": "calendar_today", "count": 29, "successRate": 0.96}
+        {"id": "calendar_today", "count": 29, "successRate": 1.0}
       ],
       "topApps": [
         {"packageName": "com.discord", "count": 21},
@@ -52,87 +52,40 @@ KafkaLauncher は端末内ログを 3 時間単位で Gemini Pro 2.5 preview に
       "recentActionSequence": ["calendar_today", "maps_commute", "discord_dm"]
     }
   ],
-  "recentAnomalies": [
-    {"actionId": "maps_geo_search", "reason": "Intent failed 3 times consecutively"}
-  ]
+  "recentAnomalies": []
 }
 ```
 
 ## Gemini API preview 呼び出し
 
-- モデル: `gemini-2.5-pro-exp`（無料プレビュー / Structured Output）。
-- エンドポイント: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent`。
-- `generationConfig`: `{"temperature":0.3,"topP":0.95,"responseMimeType":"application/json","responseSchema":ActionRecommendationSet}`。
-- `ActionRecommendationSet` スキーマ:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "timeWindows": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "windowId": {"type": "string"},
-          "primaryActionIds": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
-          "fallbackActionIds": {"type": "array", "items": {"type": "string"}, "maxItems": 4}
-        },
-        "required": ["windowId", "primaryActionIds"]
-      }
-    },
-    "globalPins": {"type": "array", "items": {"type": "string"}, "maxItems": 6},
-    "suppressions": {"type": "array", "items": {"type": "string"}, "maxItems": 6},
-    "rationales": {
-      "type": "array",
-      "items": {"type": "object", "properties": {"targetId": {"type": "string"}, "summary": {"type": "string"}}, "required": ["targetId", "summary"]}
-    }
-  },
-  "required": ["timeWindows"]
-}
-```
-
-`GeminiApiClient` は `OkHttpClient` の `POST` を 1 回送信し、`payload.json` を `contents[1].parts[0].text` に封入する。プレビュー API なので API キーのみで完結し、レスポンスが欠けても既存ビューは保持される。
+- モデル: `gemini-2.5-pro-exp`
+- エンドポイント: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent`
+- `generationConfig`: `GeminiConfig.generationConfig`（temperature/topP/responseMimeType/ActionRecommendationSet schema）
+- リクエスト構造: `contents[0]` に指示文、`contents[1].parts[0].text` に `payload.json` を JSON 文字列として埋め込む。
+- API キー: `app/build.gradle.kts` が `GEMINI_API_KEY` プロパティを `resValue("string", "gemini_api_key", …)` で埋め込む。`GeminiSyncWorker` は `R.string.gemini_api_key` を読み、空文字の場合は送信をスキップする。
+- レスポンス解析: `GeminiApiClient` が `candidates[0].content.parts[0].text` を JSON として `GeminiRecommendationJson.decode` へ渡し、欠損時は `null` を返す。
 
 ## 推薦保存と配信
 
-1. Worker は Gemini 応答を `GeminiRecommendationStore`（`DataStore<Preferences>` ラッパー）へ保存する。ストアは `/files/config/gemini_recommendations.json` を単一情報源として保持する。
-2. ファイル構造は次のとおり。
-
-```json
-{
-  "generatedAt": "2024-06-25T09:00:00Z",
-  "windows": [
-    {
-      "id": "weekday_morning",
-      "start": "05:00",
-      "end": "09:59",
-      "primaryActionIds": ["discord_dm", "calendar_today"],
-      "fallbackActionIds": ["maps_commute", "brave_vrc"]
-    }
-  ],
-  "globalPins": ["brave_search", "discord_dm"],
-  "suppressions": ["maps_geo_search"]
-}
-```
-
-3. `GeminiRecommendationStore.observe()` は `LauncherViewModel` へ Flow で繋ぎ、`QuickActionRepository.observe()` と合流して `LauncherState.recommendedActions` `LauncherState.favoritePins` `LauncherState.aiPreview` を 1 つの更新ループにまとめる。
-4. `globalPins` は `QuickActionRepository` の `priorityOverrides` を動的に書き換え、`suppressions` は `LauncherConfig.blockedActionIds` に統合する。
-5. `FavoriteAppsRow` は `favoritePins` を最優先で埋め、残り枠のみを ActionLog 上位アプリで補完する。`AiRecommendationPreview` も同じ `LauncherState.aiPreview` を使い、Gemini が Brave を 2 位に格上げした場合でもホーム画面上部とカードの両方が同時に変化する。
+1. Worker が受信した `GeminiRecommendations` を `GeminiRecommendationStore.update()` で `/files/config/gemini_recommendations.json` に保存する。DataStore の値そのものが JSON であり、他レイヤーは同ファイルのみを参照する。
+2. `LauncherViewModel` は `GeminiRecommendationStore.data` を Flow で購読し、`quickActions`（抑止 ID 除外）、`recommendedActions`、`favoriteApps`、`AiRecommendationPreview`、`LauncherState.currentTimeWindowId`、`settings` 画面の最終更新表示を同時に更新する。
+3. `globalPins` はアプリのお気に入りを先頭から埋めるリストとして扱い、`suppressions` は QuickAction を UI 全域で非表示にする。
+4. `AiRecommendationPreview` は `state.aiPreview.isExpanded` に応じてカードを表示し、`windows` 行では QuickAction ラベル、`rationales` では対象 ID をラベル／ID で表示する。
 
 ## 画面挙動
 
-- `QuickActionRow` は `LauncherState.currentTimeWindowId`（`RecommendActionsUseCase` が判定）に応じて `windows.primaryActionIds` を最大 4 件表示する。Gemini が `weekday_morning` を更新すると即座にカードが差し替わる。
-- `FavoriteAppsRow` は `globalPins` を左端から配置し、3 件に満たない場合のみ ActionLog 上位アプリで補完する。`suppressions` 指定 ID は非表示を維持する。
-- `AiRecommendationPreviewButton` はアプリドロワーと設定ボタンの 3 連ボタン中央に置き、`LauncherState.aiPreview.isExpanded` をトグルするのみで追加リクエストは発生しない。`AiRecommendationPreview` は `windows.primaryActionIds` を時刻順に並べ rationales を 1 行メモとして描画し、レスポンスが空でも最後のスナップショットを保持する。
-- 設定画面プレビューカードは `gemini_recommendations.json.generatedAt` を表示し、再スコアリング時刻を把握できるようにする。
+- `HomeScreen` の上部は「アプリ一覧 / AIプレビュー / 設定」の 3 ボタン構成。AI ボタンは `LauncherViewModel.toggleAiPreview()` を呼び、追加リクエストは発生しない。
+- `AiRecommendationPreview` カードは `generatedAt` のローカル時刻表示、`window.id`、`primary/fallback` のラベル列、`rationales` の要約を同時に描画し、データが空でも最後のスナップショットを保持する。
+- `QuickActionRow` には Gemini 推薦（`window.primaryActionIds` → 実在する QuickAction から最大 4 件）が表示され、欠損時は `RecommendActionsUseCase` のフォールバックを使用する。
+- `FavoriteAppsRow` は `GeminiRecommendations.globalPins` → `PinnedAppsRepository` → 行動ログ順の優先順位で 5 件を決定する。
+- 設定画面には `Gemini 最終更新` セクションを追加し、ISO 文字列をローカル時刻に変換した値、もしくは未生成メッセージを表示する。
 
 ## 最小リリース手順
 
-1. `GeminiConfig` を定義し、周期・モデル名・エンドポイント・ストアパス・API キーキー名を集中管理する。
-2. `GeminiSyncWorker` を登録し、ActionLog と AuditLogger からの入力を `GeminiPayloadBuilder` に渡す。
-3. `GeminiApiClient` で `generateContent` を呼び `GeminiRecommendationStore` へ保存する。
-4. `LauncherViewModel` が `GeminiRecommendationStore.observe()` を取り込み、`LauncherState` を再計算する。
-5. UI コンポーネントが Flow を購読し、`QuickActionRow` `FavoriteAppsRow` `AiRecommendationPreview` の 3 箇所を同時に更新する。
+1. `gradle.properties` などに `GEMINI_API_KEY` をセットし、`./gradlew assembleDebug` で `resValue` を注入する。
+2. アプリ起動または `adb shell am broadcast -a android.intent.action.BOOT_COMPLETED` で `GeminiWorkScheduler` が登録されていることを `adb shell dumpsys jobscheduler` で確認する。
+3. `adb logcat | grep GeminiSyncWorker` で payload 生成→API POST→`GeminiRecommendationStore` 更新のログを確認する。
+4. `adb shell run-as com.kafka.launcher cat files/config/gemini_recommendations.json` で JSON が更新されることを確認する。
+5. ホーム画面の AI ボタンでカードを展開し、`QuickActionRow` と `FavoriteAppsRow` が Gemini の `globalPins`/`primaryActionIds` に従って更新されることを検証する。
 
-以上で Gemini 連携の最小フィードバックループを定義し、Android 内部のみで完結する実装計画とする。
+以上の構成で Android 内のログ収集から Gemini 推薦表示までを閉じたループとして運用する。
