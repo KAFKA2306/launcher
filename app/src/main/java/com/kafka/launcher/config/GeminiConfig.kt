@@ -8,7 +8,6 @@ object GeminiConfig {
     const val periodHours = 3L
     const val recommendationDirectory = "config"
     const val recommendationFileName = "gemini_recommendations.json"
-    const val recommendationStoreKey = "gemini_recommendations_payload"
     const val workName = "GeminiSync"
     const val payloadActionLimit = 4
     const val payloadAppLimit = 4

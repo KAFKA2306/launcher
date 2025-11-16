@@ -13,12 +13,12 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 
 | レイヤー | 役割 | 主要 API |
 | --- | --- | --- |
-| config | `GeminiConfig` に周期・エンドポイント・モデル名・生成設定・DataStore パス・WorkName を集約。 | `GeminiConfig.periodHours` `GeminiConfig.endpoint` |
-| data | `ActionLogRepository` が DAO/ファイル、`GeminiRecommendationStore` が DataStore JSON を提供。 | `exportEvents(limit)` `statsSnapshot(limit)` `GeminiRecommendationStore.data` |
+| config | `GeminiConfig` に周期・エンドポイント・モデル名・生成設定・ファイルパス・WorkName を集約。 | `GeminiConfig.periodHours` `GeminiConfig.endpoint` |
+| data | `ActionLogRepository` が DAO/ファイル、`GeminiRecommendationStore` が JSON ファイルを提供。 | `exportEvents(limit)` `statsSnapshot(limit)` `GeminiRecommendationStore.data` |
 | domain | `GeminiPayloadBuilder` が UTC 正規化と JSON 生成、`RecommendActionsUseCase` がフォールバックを返す。 | `build(events, stats)` |
 | worker | `GeminiSyncWorker` が `WorkManager` から実行され、Payload 生成→API 呼び出し→ストア更新を直列化。 | `doWork()` |
 | remote | `GeminiApiClient` が `OkHttpClient` で 1 回の POST を送信し Structured Output を解析。 | `fetchRecommendations(payload, apiKey)` |
-| store | `GeminiRecommendationStore` が `/files/config/gemini_recommendations.json` を DataStore<Preferences> で保持。 | `data: Flow<GeminiRecommendations?>` `update(snapshot)` |
+| store | `GeminiRecommendationStore` が `/files/config/gemini_recommendations.json` を直接読み書きする。 | `data: Flow<GeminiRecommendations?>` `update(snapshot)` |
 | launcher | `LauncherViewModel` が quick actions / stats / Gemini Flow を集約し UI state に落とし込む。 | `refreshGeminiOutputs()` |
 | ui | `HomeScreen` の 3 ボタン行と `AiRecommendationPreview` が Gemini 状態を描画。 | `AiRecommendationPreview(state)` |
 
@@ -67,7 +67,7 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 
 ## 推薦保存と配信
 
-1. Worker が受信した `GeminiRecommendations` を `GeminiRecommendationStore.update()` で `/files/config/gemini_recommendations.json` に保存する。DataStore の値そのものが JSON であり、他レイヤーは同ファイルのみを参照する。
+1. Worker が受信した `GeminiRecommendations` を `GeminiRecommendationStore.update()` で `/files/config/gemini_recommendations.json` に保存する。JSON ファイルそのものが単一のソースとなり、他レイヤーは同ファイルのみを参照する。
 2. `LauncherViewModel` は `GeminiRecommendationStore.data` を Flow で購読し、`quickActions`（抑止 ID 除外）、`recommendedActions`、`favoriteApps`、`AiRecommendationPreview`、`LauncherState.currentTimeWindowId`、`settings` 画面の最終更新表示を同時に更新する。
 3. `globalPins` はアプリのお気に入りを先頭から埋めるリストとして扱い、`suppressions` は QuickAction を UI 全域で非表示にする。
 4. `AiRecommendationPreview` は `state.aiPreview.isExpanded` に応じてカードを表示し、`windows` 行では QuickAction ラベル、`rationales` では対象 ID をラベル／ID で表示する。
