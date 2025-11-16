@@ -159,7 +159,7 @@ enum class AppSort { NAME, USAGE }
 ## 2.6 Repository 責務
 
 - **AppRepository**: インストール済みアプリ列挙、カテゴリ判定、検索フィルタ
-- **QuickActionRepository**: 行動定義の監視とフィルタ。`QuickActionIntentFactory`で実行可能性を検証し、Discord Deep Linkを含むすべての行動を端末状態に合わせて絞り込み、ブロードキャスト受信後に即リロード。再計算した一覧は `QuickActionAuditLogger` を通じて `Android/data/com.kafka.launcher/files/logs/quickactions_snapshot.txt` へ書き出す。
+- **QuickActionRepository**: 行動定義の監視とフィルタ。`QuickActionIntentFactory`で実行可能性を検証し、指定パッケージで解決できない行動は一覧から除外する。ブロードキャスト受信後に即リロードし、再計算した一覧を `QuickActionAuditLogger` を通じて `Android/data/com.kafka.launcher/files/logs/quickactions_snapshot.txt` へ書き出す。
 - **ActionLogRepository**: 実行ログ書き込み、利用頻度算出。ログ群は `logs_manifest.json` と `logs_bundle.zip` にまとめ、PC 側は `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認しつつ `toybox cp` で `Download` へ複製してから `adb pull` する。
 - **SettingsRepository**: DataStore から `Settings` Flow を提供
 - **PinnedAppsRepository**: 長押しで登録したお気に入りアプリのパッケージ名集合を DataStore に保存/監視
@@ -198,7 +198,7 @@ enum class AppSort { NAME, USAGE }
 
 - `LauncherConfig.favoritesLimit` をホーム下段での「よく使う」枠数に使う。
 - `LauncherConfig.recentLimit` を使い `ActionLogRepository.recent` の結果から最近起動アプリを抽出し、`FavoriteAppsRow` を流用して表示する。
-- よく使う列には長押しで登録したアプリを優先し、不足分を使用統計で補完する。
+- よく使う列には長押しで登録したアプリを優先し、使用統計の上位アプリを組み合わせて枠を埋める。
 - 検索やレコメンドと同じく、この領域も `BottomLauncherPanel` 内で下寄せ配置し、スクロールせずとも 3〜5 件は常に見えるよう `Spacer` を抑制する。
 
 ---
@@ -221,7 +221,6 @@ enum class AppSort { NAME, USAGE }
 | Key | 役割 |
 | --- | --- |
 | `statsLimit` | `ActionLogRepository.stats` の取得件数 |
-| `recommendationFallbackCount` | レコメンドのフォールバック数 |
 | `favoritesLimit` | ホームで表示する「よく使う」最大件数 |
 | `recentLimit` | 最近起動アプリの抽出件数 |
 | `appsPerRow` | ホーム/ドロワー共通のグリッド列数（固定 8）|

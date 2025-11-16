@@ -156,8 +156,7 @@ class LauncherViewModel(
     }
 
     private fun refreshRecommendations(actions: List<QuickAction>, stats: List<ActionStats>) {
-        val fallback = if (actions.isEmpty()) emptyList() else actions.take(LauncherConfig.recommendationFallbackCount)
-        val recommendations = recommendActionsUseCase(actions, stats, fallback)
+        val recommendations = recommendActionsUseCase(actions, stats)
         _state.update { it.copy(recommendedActions = recommendations) }
     }
 
@@ -211,13 +210,7 @@ class LauncherViewModel(
             .take(LauncherConfig.favoritesLimit)
             .toList()
 
-        val resolvedFavorites = if (favorites.isNotEmpty()) {
-            favorites
-        } else {
-            sortApps(cachedApps, AppSort.NAME).take(LauncherConfig.favoritesLimit)
-        }
-
-        val combined = (pinned + resolvedFavorites)
+        val combined = (pinned + favorites)
             .distinctBy { it.packageName }
             .take(LauncherConfig.favoritesLimit)
 

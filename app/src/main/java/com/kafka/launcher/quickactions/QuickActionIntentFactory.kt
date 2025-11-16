@@ -60,11 +60,7 @@ class QuickActionIntentFactory(private val context: Context) {
     private fun preferPackage(intent: Intent, packageName: String?): Intent? {
         if (packageName.isNullOrBlank()) return intent.takeIf { isResolvable(it) }
         val targeted = Intent(intent).setPackage(packageName)
-        return when {
-            isResolvable(targeted) -> targeted
-            isResolvable(intent) -> intent
-            else -> null
-        }
+        return targeted.takeIf { isResolvable(it) }
     }
 
     private fun isResolvable(intent: Intent) = intent.resolveActivity(packageManager) != null
