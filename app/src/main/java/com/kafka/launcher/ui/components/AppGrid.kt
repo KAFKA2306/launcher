@@ -1,6 +1,5 @@
 package com.kafka.launcher.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,11 +59,7 @@ private fun AppTile(app: InstalledApp, onClick: () -> Unit, onLongClick: () -> U
     Surface(
         color = Color(LauncherConfig.surfaceLowColor),
         contentColor = MaterialTheme.colorScheme.onSurface,
-        shape = RoundedCornerShape(LauncherConfig.sectionCardCornerRadiusDp.dp),
-        border = BorderStroke(
-            width = LauncherConfig.appTileBorderWidthDp.dp,
-            color = Color(LauncherConfig.surfaceBorderColor)
-        )
+        shape = RoundedCornerShape(LauncherConfig.sectionCardCornerRadiusDp.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

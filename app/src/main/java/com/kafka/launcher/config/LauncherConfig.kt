@@ -48,7 +48,6 @@ object LauncherConfig {
     const val sectionTitleLineHeightSp = 20
     const val primaryButtonElevationDefaultDp = 3
     const val primaryButtonElevationPressedDp = 1
-    const val appTileBorderWidthDp = 1
     const val homeContentHorizontalPaddingDp = 8
     const val homeContentVerticalPaddingDp = 8
     const val navigationModeKey = "navigation_mode"
