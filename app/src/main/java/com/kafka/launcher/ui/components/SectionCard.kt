@@ -21,6 +21,12 @@ fun SectionCard(
         shape = RoundedCornerShape(LauncherConfig.sectionCardCornerRadiusDp.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = LauncherConfig.sectionCardElevationDp.dp)
     ) {
-        Column(modifier = Modifier.padding(LauncherConfig.sectionCardPaddingDp.dp), content = content)
+        Column(
+            modifier = Modifier.padding(
+                horizontal = LauncherConfig.sectionCardPaddingHorizontalDp.dp,
+                vertical = LauncherConfig.sectionCardPaddingVerticalDp.dp
+            ),
+            content = content
+        )
     }
 }

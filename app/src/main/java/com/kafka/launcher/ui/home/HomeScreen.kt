@@ -71,7 +71,10 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color(LauncherConfig.homeBackgroundColor))
             .padding(WindowInsets.statusBars.asPaddingValues())
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(
+                horizontal = LauncherConfig.homeContentHorizontalPaddingDp.dp,
+                vertical = LauncherConfig.homeContentVerticalPaddingDp.dp
+            )
     ) {
         if (state.isLoading) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -256,7 +259,7 @@ private fun AppGridSection(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(LauncherConfig.sectionVerticalSpacingDp.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -267,7 +270,7 @@ private fun AppGridSection(
                 onAppClick = onAppClick,
                 onAppLongPress = onAppLongPress,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 8.dp)
+                contentPadding = PaddingValues(bottom = LauncherConfig.sectionSpacingBottomDp.dp)
             )
         }
     }

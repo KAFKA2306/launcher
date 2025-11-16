@@ -7,19 +7,22 @@
 ## Color Tokens
 | Token | Config Key | 値 | 主な適用対象 |
 | --- | --- | --- | --- |
-| BaseBackground | `homeBackgroundColor` | `#F4F6FA` | 全画面の背景。ΔL ≒ 9 でカード層との差を担保。 |
-| SurfaceCard | `cardBackgroundColor` | `#FFFFFF` | セクションカード（おすすめ / 最近 / よく使う / クイックアクション / 検索結果）。 |
-| SectionTitle | `sectionTitleColor` | `#2A2E39` | セクション見出し。 |
-| PrimaryButton | `primaryButtonColor` | `#6C4DFF` | ドロワー / AI / 設定ボタンなど主要アクション。 |
-| OnPrimary | `primaryButtonContentColor` | `#FFFFFF` | Primary ボタンのテキスト / アイコン。 |
+| BaseBackground | `homeBackgroundColor` | `#0D1117` | 画面ベース。ダーク前提で全体を引き締める。 |
+| SurfaceCard | `cardBackgroundColor` | `#1E242C` | セクションカード / 検索結果。 |
+| SurfaceLow | `surfaceLowColor` | `#161B22` | 全アプリタイルや小型コンポーネント。 |
+| SurfaceBorder | `surfaceBorderColor` | `#232A33` | タイル境界線。 |
+| OnSurface | `sectionTitleColor` | `#E6EAF2` | セクション見出し / ラベル。 |
+| OnSurfaceMuted | `sectionTitleVariantColor` | `#9DA7B8` | サブテキスト。 |
+| PrimaryButton | `primaryButtonColor` | `#6C4DFF` | 主要アクション。 |
+| OnPrimary | `primaryButtonContentColor` | `#FFFFFF` | Primary ボタン内のテキスト / アイコン。 |
 
 ## Typography Tokens
 | Token | Config Key | 値 | 用途 |
 | --- | --- | --- | --- |
-| AppGridLabel | `appGridLabelFontSizeSp` `appGridLabelLineHeightSp` | `12sp / 16sp` | 「すべてのアプリ」グリッドのラベル。`maxLines=2`, `TextAlign.Center`, `softWrap=true`, `TextOverflow.Ellipsis` を必須条件として適用。 |
+| AppGridLabel | `appGridLabelFontSizeSp` `appGridLabelLineHeightSp` | `13sp / 18sp` | 全アプリラベル。`maxLines=2` `TextAlign.Center` `softWrap=true` `TextOverflow.Ellipsis` が必須。 |
 | SectionTitle | `sectionTitleLineHeightSp` | `20sp` | セクション見出しの lineHeight を統一。 |
 
-ラベル幅は `appGridLabelWidthDp = 68dp` で固定し、アイコン幅と中央寄せを一致させる。全 TextStyle は `Typography` 拡張 (`appGridLabel`, `sectionTitle`) 経由で利用する。
+ラベル幅は `appGridLabelWidthDp = 68dp` で固定し、アイコン幅と中央寄せを一致させる。TextStyle は `Typography.appGridLabel` を共有。
 
 ## Shape Tokens
 - 角丸は `cornerRadiusDp = 12dp` を共通値とし、Card / Button / BottomSheet / 検索結果リストに適用する。
@@ -33,7 +36,9 @@
 | フローティング / モーダルメニュー | `8dp`
 
 ## レイアウト/スペーシング（参照値）
-- セクション上 24dp / 下 16dp、グリッド間隔 16dp。
-- カード内パディング 16dp、ラベル上下 8dp を推奨。
+- セクション上 8dp / 下 8dp、縦方向の並びも 8dp。
+- グリッド縦横 8dp。
+- セクションカード padding = 横12dp / 縦10dp。
+- Home 画面外側の余白 = 8dp。
 
 以上のトークンは必ず Config から取得し、Compose 側では再定義しない。新規セクションやカードを追加する際はこのドキュメントに追記した上で `LauncherConfig` を更新する。

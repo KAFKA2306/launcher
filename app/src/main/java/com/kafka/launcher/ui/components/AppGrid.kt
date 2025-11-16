@@ -1,5 +1,6 @@
 package com.kafka.launcher.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,12 +13,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,7 +57,15 @@ fun AppGrid(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AppTile(app: InstalledApp, onClick: () -> Unit, onLongClick: () -> Unit) {
-    Surface {
+    Surface(
+        color = Color(LauncherConfig.surfaceLowColor),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = RoundedCornerShape(LauncherConfig.sectionCardCornerRadiusDp.dp),
+        border = BorderStroke(
+            width = LauncherConfig.appTileBorderWidthDp.dp,
+            color = Color(LauncherConfig.surfaceBorderColor)
+        )
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
