@@ -23,7 +23,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
 - DataStore で保持する `showFavorites` が有効かつ統計が取れていれば `FavoriteAppsRow` を表示。`ActionLogRepository` の `stats` で得た上位 5 アプリを並べます。
-- 最下段でアプリドロワー / 設定ボタンを配置。NavigationInfo が 3 ボタン判定なら `NavigationNotice` をクッションとして表示。
+- 最下段でアプリドロワー / AIおすすめプレビュー / 設定ボタンを横並びに配置。`AiRecommendationPreviewButton` を押すとホーム画面上部に Gemini 推薦のミニプレビューを挿入し、`NavigationNotice` は 3 ボタン判定時にクッションとして表示。
 
 ### 1.2 アプリドロワー
 
@@ -62,15 +62,13 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `logs_manifest.json` : 上記ファイルと `logs_bundle.zip` のメタデータ（サイズ / 更新時刻）を列挙。
 - `logs_bundle.zip` : すべてのログと `logs_manifest.json` をまとめたアーカイブ。PC 側はこれを定期的に Pull するだけで同期完了。
 
-#### PC へのログ取得手順
+#### Gemini 再スコアリングサイクル
 
-1. `adb devices` で端末が接続済みであることを確認する。
-2. `adb shell` で `/sdcard/Android/data/com.kafka.launcher/files/logs/` を確認し、`logs_bundle.zip` の更新時刻とサイズを把握する。
-3. `adb shell "toybox cp -f /sdcard/Android/data/com.kafka.launcher/files/logs/logs_bundle.zip /sdcard/Download/launcher_logs_bundle.zip"` で誰でも読める `Download` フォルダへ複製する。
-4. `adb pull /sdcard/Download/launcher_logs_bundle.zip ./launcher_logs_bundle.zip` を実行して PC へ取得する。
-5. `unzip launcher_logs_bundle.zip -d launcher_logs_bundle` で展開し、`logs_manifest.json` に沿って差分管理する。
-
-`logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できます。
+- `GeminiSyncWorker`（WorkManager の `PeriodicWorkRequest`）が 3 時間ごとに起床し、`ActionLogRepository` と `QuickActionAuditLogger` の最新統計をその場で集計する。
+- Worker は `GeminiPayloadBuilder` が生成した JSON をそのまま無料の Gemini Pro 2.5 preview（`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent`）へ送り、Structured Output で受け取った推薦スロットを `GeminiRecommendationStore` に保存する。
+- DataStore に書き込まれた差分だけが `LauncherViewModel` の Flow を刺激するため、Gemini 応答が届かなかった場合でもホーム画面は直前の状態を描画し続ける。
+- `QuickActionRow` は `timeWindows.primaryActionIds` を即座に適用し、`FavoriteAppsRow` は `globalPins` の並び順で差し込みを行う。`AiRecommendationPreview` は `GeminiRecommendationStore` の Flow を監視し、最新セットをホーム画面で即時確認できる。すべてが Android 内部で閉じており、Gemini の更新結果はビュー再描画として直接確認できる。
+- 詳細なパイプラインとスキーマは `docs/design/gemini_feedback_loop.md` を参照する。
 
 ## 2. アーキテクチャ
 
