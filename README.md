@@ -22,8 +22,9 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
-- DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、空き枠は `ActionLogRepository` の `stats` に基づく使用頻度上位で補います。
-- 最下段でアプリドロワー / 設定ボタンを配置。NavigationInfo が 3 ボタン判定なら `NavigationNotice` をクッションとして表示。
+- DataStore で保持する `showFavorites` が有効かつ統計が取れていれば `FavoriteAppsRow` を表示。`ActionLogRepository` の `stats` で得た上位 5 アプリを並べます。
+- 最下段でアプリドロワー / 設定ボタンを横並びに配置。`AiRecommendationPreviewButton` / `AiRecommendationPreview` / `GeminiRecommendationStore` は設計済みだが未実装であり、現行ビルドでは通常の 2 ボタン構成のみが動作する。ホーム画面の AI スロットは `docs/design/gemini_feedback_loop.md` に記述された仕様段階の内容である点を明示する。`NavigationNotice` は 3 ボタン判定時にクッションとして表示。
+- AIおすすめプレビューの挙動は `LauncherState.aiPreview` を用いて `gemini-2.5-pro-exp` の `windows.primaryActionIds` / `globalPins` / `rationales` をホームで確認する計画だが、端末内での保存・描画は未実装。README では将来の UI 変化を理解するための仕様メモとして残している。
 
 ### 1.2 アプリドロワー
 
@@ -70,7 +71,13 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 4. `adb pull /sdcard/Download/launcher_logs_bundle.zip ./launcher_logs_bundle.zip` を実行して PC へ取得する。
 5. `unzip launcher_logs_bundle.zip -d launcher_logs_bundle` で展開し、`logs_manifest.json` に沿って差分管理する。
 
-`logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できます。
+`logs_manifest.json` は生成タイミングの ISO 時刻と各ファイルのサイズ・更新時刻を持つため、Gemini とのフィードバックループや PC 自動収集スクリプトは差分検出に利用できる。
+
+#### Gemini 再スコアリングサイクル（仕様段階）
+
+- `GeminiSyncWorker` / `GeminiPayloadBuilder` / `GeminiRecommendationStore` / `AiRecommendationPreview` はまだコード化されていない。ここで説明している 3 時間サイクルは、端末内でログ→`gemini-2.5-pro-exp`→UI 反映まで閉じる将来実装の設計メモである。
+- 設計では WorkManager が `ActionLogRepository` と `QuickActionAuditLogger` の統計を収集し、`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent` へ送信する。Structured Output で受け取った推薦を DataStore に保存し、差分だけを `LauncherViewModel` の Flow に流す計画になっている。
+- `QuickActionRow` / `FavoriteAppsRow` / `AiRecommendationPreview` は DataStore の更新をそのまま描画し、Gemini 応答が遅延・欠損した場合でも端末内スナップショットを使って UI を維持する想定。詳細なパイプラインとスキーマは `docs/design/gemini_feedback_loop.md` にまとめている。
 
 ## 2. アーキテクチャ
 
@@ -104,7 +111,7 @@ app/src/main/java/com/kafka/launcher
 
 ## 4. 既知の制約
 
-- ホーム/ドロワーの UI は縦スクロールのみ。カテゴリ別表示はプレビューのみで、詳細モックアップは用意していません。
+- ホーム/ドロワーの UI は縦スクロールのみ。カテゴリ別表示はアイデア段階で詳細モックアップはなく、アプリ長押しのピン留めやアクションシートも未実装。
 - Theme 切り替えやアイコンサイズ設定はまだ備えていない。設定画面はお気に入り表示とソート切り替えのみ。
 - LLM 連携や通知リスナー等の機能は含まれていない。必要な情報は前述のログ出力で取得する。
 
