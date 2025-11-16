@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun AiRecommendationPreview(state: AiPreviewState, modifier: Modifier = Modifier) {
-    if (!state.isExpanded) return
     Card(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(text = stringResource(id = R.string.ai_preview_title), style = MaterialTheme.typography.titleMedium)

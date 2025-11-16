@@ -37,7 +37,6 @@ fun LauncherNavHost(
     onPinApp: (String) -> Unit,
     onUnpinApp: (String) -> Unit,
     onDeleteApp: (String) -> Unit,
-    onToggleAiPreview: () -> Unit,
     onGeminiApiKeyInputChange: (String) -> Unit,
     onSaveGeminiApiKey: () -> Unit,
     onClearGeminiApiKey: () -> Unit,
@@ -59,10 +58,8 @@ fun LauncherNavHost(
                 onRecommendedClick = onRecommendedClick,
                 onAppClick = onAppClick,
                 onAppLongPress = { selectedApp = it },
-                navigationInfo = state.navigationInfo,
                 onOpenDrawer = { navController.navigate(LauncherDestinations.DRAWER) },
-                onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) },
-                onToggleAiPreview = onToggleAiPreview
+                onOpenSettings = { navController.navigate(LauncherDestinations.SETTINGS) }
             )
         }
         composable(LauncherDestinations.DRAWER) {
@@ -88,7 +85,8 @@ fun LauncherNavHost(
                 isGeminiApiKeyConfigured = state.geminiApiKeyConfigured,
                 onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
                 onSaveGeminiApiKey = onSaveGeminiApiKey,
-                onClearGeminiApiKey = onClearGeminiApiKey
+                onClearGeminiApiKey = onClearGeminiApiKey,
+                aiPreviewState = state.aiPreview
             )
         }
     }

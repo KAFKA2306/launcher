@@ -1,6 +1,6 @@
 # KafkaLauncher
 
-最小構成の Android ランチャー。Jetpack Compose + ViewModel でホーム画面 / アプリドロワー / クイックアクションだけに絞り、設定値と端末依存ロジックは `LauncherConfig` と `NavigationInfoResolver` に集約しています。Xiaomi 端末では 3 ボタン前提 UI に自動でフォールバックし、ホーム・設定画面で警告カード（`NavigationNotice`）を表示します。
+最小構成の Android ランチャー。Jetpack Compose + ViewModel でホーム画面 / アプリドロワー / クイックアクションだけに絞り、設定値と端末依存ロジックは `LauncherConfig` と `NavigationInfoResolver` に集約しています。Xiaomi 端末では 3 ボタン前提 UI に自動でフォールバックし、設定画面で警告カード（`NavigationNotice`）を表示します。
 
 dist:
 https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk
@@ -25,8 +25,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `KafkaSearchBar` でアプリ名 / クイックアクションの部分一致検索。入力中は `SearchResults` セクションだけを表示。
 - 検索が空のときは `QuickActionRow` でおすすめ（`LauncherViewModel.recommendedActions`）と全 QuickAction を表示。
 - DataStore で保持する `showFavorites` が有効なときは `FavoriteAppsRow` を表示。長押しでお気に入り登録したアプリを優先し、`ActionLogRepository` の `stats` に基づく使用頻度上位を組み合わせます。
-- 最下段でアプリ一覧 / AI プレビュー / 設定の 3 ボタンを横並びに配置。AI ボタンは `LauncherViewModel.toggleAiPreview()` で `AiRecommendationPreview` を開閉し、`NavigationNotice` は 3 ボタン判定時のみ表示する。
-- `AiRecommendationPreview` は `GeminiRecommendationStore` の `globalPins` `windows` `rationales` をそのまま描画し、Gemini の最終更新時刻をローカル時刻で表示する。QuickAction おすすめとお気に入り行も同じストアからのデータを優先的に採用する。
+- 最下段でアプリ一覧 / AI プレビュー / 設定の 3 ボタンを横並びに配置。AI ボタンも設定ボタンも `SettingsScreen` へ遷移し、そこで Gemini プレビューやシステムナビ注意カードを確認する。
+- `AiRecommendationPreview` は `GeminiRecommendationStore` の `globalPins` `windows` `rationales` を設定画面内で描画し、Gemini の最終更新時刻をローカル時刻で表示する。QuickAction おすすめとお気に入り行も同じストアからのデータを優先的に採用する。
 
 ### 1.2 アプリドロワー
 
@@ -37,7 +37,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 - 「よく使うアプリ表示」トグルと「並び順（名前 / 使用頻度）」ラジオボタン。
 - 「デフォルトホームに設定」ボタンで `RoleManager` へ遷移要求。
-- ナビゲーションが 3 ボタンの場合はホーム同様 `NavigationNotice` を最上段に表示。
+- ナビゲーションが 3 ボタンの場合は `NavigationNotice` を設定画面の最上段に表示し、ホーム画面では非表示。
+- Gemini プレビューカードとその最終更新時刻を `AiRecommendationPreview` で表示。
 - 「Gemini APIキー」セクションで入力→保存すると `EncryptedSharedPreferences` に永続化され、削除ボタンで端末から除去できる。保存状態は `Gemini 最終更新` 情報と共に表示される。
 
 ### 1.4 クイックアクション

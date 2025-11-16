@@ -70,12 +70,12 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 1. Worker が受信した `GeminiRecommendations` を `GeminiRecommendationStore.update()` で `/files/config/gemini_recommendations.json` に保存する。JSON ファイルそのものが単一のソースとなり、他レイヤーは同ファイルのみを参照する。
 2. `LauncherViewModel` は `GeminiRecommendationStore.data` を Flow で購読し、`quickActions`（抑止 ID 除外）、`recommendedActions`、`favoriteApps`、`AiRecommendationPreview`、`LauncherState.currentTimeWindowId`、`settings` 画面の最終更新表示を同時に更新する。
 3. `globalPins` はアプリのお気に入りを先頭から埋めるリストとして扱い、`suppressions` は QuickAction を UI 全域で非表示にする。
-4. `AiRecommendationPreview` は `state.aiPreview.isExpanded` に応じてカードを表示し、`windows` 行では QuickAction ラベル、`rationales` では対象 ID をラベル／ID で表示する。
+4. `AiRecommendationPreview` は設定画面内のカードとして常時表示し、`windows` 行では QuickAction ラベル、`rationales` では対象 ID をラベル／ID で表示する。
 
 ## 画面挙動
 
-- `HomeScreen` の上部は「アプリ一覧 / AIプレビュー / 設定」の 3 ボタン構成。AI ボタンは `LauncherViewModel.toggleAiPreview()` を呼び、追加リクエストは発生しない。
-- `AiRecommendationPreview` カードは `generatedAt` のローカル時刻表示、`window.id`、`primary/fallback` のラベル列、`rationales` の要約を同時に描画し、データが空でも最後のスナップショットを保持する。
+- `HomeScreen` の上部は「アプリ一覧 / AIプレビュー / 設定」の 3 ボタン構成で、AI ボタンと設定ボタンはいずれも `SettingsScreen` へ遷移する。
+- `AiRecommendationPreview` カードは設定画面に配置し、`generatedAt` のローカル時刻表示、`window.id`、`primary/fallback` のラベル列、`rationales` の要約を同時に描画し、データが空でも最後のスナップショットを保持する。
 - `QuickActionRow` には Gemini 推薦（`window.primaryActionIds` → 実在する QuickAction から最大 4 件）が表示され、欠損時は `RecommendActionsUseCase` のフォールバックを使用する。
 - `FavoriteAppsRow` は `GeminiRecommendations.globalPins` → `PinnedAppsRepository` → 行動ログ順の優先順位で 5 件を決定する。
 - 設定画面には `Gemini 最終更新` セクションと API キー入力欄を置き、`LauncherState.geminiApiKeyInput` を編集→「保存」で `GeminiApiKeyStore.save`、`isGeminiApiKeyConfigured` に応じて「削除」を制御する。
@@ -86,6 +86,6 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 2. アプリ起動または `adb shell am broadcast -a android.intent.action.BOOT_COMPLETED` で `GeminiWorkScheduler` が登録されていることを `adb shell dumpsys jobscheduler` で確認する。
 3. `adb logcat | grep GeminiSyncWorker` で payload 生成→API POST→`GeminiRecommendationStore` 更新のログを確認する。
 4. `adb shell run-as com.kafka.launcher cat files/config/gemini_recommendations.json` で JSON が更新されることを確認する。
-5. ホーム画面の AI ボタンでカードを展開し、`QuickActionRow` と `FavoriteAppsRow` が Gemini の `globalPins`/`primaryActionIds` に従って更新されることを検証する。
+5. 設定画面の Gemini プレビューカードで `QuickActionRow` と `FavoriteAppsRow` が Gemini の `globalPins`/`primaryActionIds` に従って更新されることを確認する。
 
 以上の構成で Android 内のログ収集から Gemini 推薦表示までを閉じたループとして運用する。

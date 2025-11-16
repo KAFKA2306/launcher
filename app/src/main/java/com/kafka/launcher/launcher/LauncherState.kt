@@ -32,8 +32,7 @@ data class LauncherState(
 data class AiPreviewState(
     val generatedAt: String = "",
     val windows: List<AiPreviewWindow> = emptyList(),
-    val rationales: List<AiPreviewRationale> = emptyList(),
-    val isExpanded: Boolean = false
+    val rationales: List<AiPreviewRationale> = emptyList()
 )
 
 data class AiPreviewWindow(

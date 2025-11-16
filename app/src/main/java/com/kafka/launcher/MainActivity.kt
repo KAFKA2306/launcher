@@ -98,7 +98,6 @@ class MainActivity : ComponentActivity() {
                 onPinApp = launcherViewModel::pinApp,
                 onUnpinApp = launcherViewModel::unpinApp,
                 onDeleteApp = ::uninstallApp,
-                onToggleAiPreview = launcherViewModel::toggleAiPreview,
                 onGeminiApiKeyInputChange = launcherViewModel::onGeminiApiKeyInputChange,
                 onSaveGeminiApiKey = launcherViewModel::saveGeminiApiKey,
                 onClearGeminiApiKey = launcherViewModel::clearGeminiApiKey
@@ -152,7 +151,6 @@ private fun KafkaLauncherApp(
     onPinApp: (String) -> Unit,
     onUnpinApp: (String) -> Unit,
     onDeleteApp: (String) -> Unit,
-    onToggleAiPreview: () -> Unit,
     onGeminiApiKeyInputChange: (String) -> Unit,
     onSaveGeminiApiKey: () -> Unit,
     onClearGeminiApiKey: () -> Unit
@@ -171,7 +169,6 @@ private fun KafkaLauncherApp(
             onPinApp = onPinApp,
             onUnpinApp = onUnpinApp,
             onDeleteApp = onDeleteApp,
-            onToggleAiPreview = onToggleAiPreview,
             onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
             onSaveGeminiApiKey = onSaveGeminiApiKey,
             onClearGeminiApiKey = onClearGeminiApiKey

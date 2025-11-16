@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,17 +33,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.R
 import com.kafka.launcher.domain.model.InstalledApp
-import com.kafka.launcher.domain.model.NavigationInfo
-import com.kafka.launcher.domain.model.NavigationMode
 import com.kafka.launcher.domain.model.QuickAction
 import com.kafka.launcher.launcher.LauncherState
-import com.kafka.launcher.ui.components.AiRecommendationPreview
 import com.kafka.launcher.ui.components.AppGrid
 import com.kafka.launcher.ui.components.FavoriteAppsRow
 import com.kafka.launcher.ui.components.KafkaSearchBar
 import com.kafka.launcher.ui.components.QuickActionRow
 import com.kafka.launcher.ui.components.LauncherIcons
-import com.kafka.launcher.ui.components.NavigationNotice
 
 @Composable
 fun HomeScreen(
@@ -51,16 +50,15 @@ fun HomeScreen(
     onRecommendedClick: (QuickAction) -> Unit,
     onAppClick: (InstalledApp) -> Unit,
     onAppLongPress: (InstalledApp) -> Unit,
-    navigationInfo: NavigationInfo,
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
-    onToggleAiPreview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dockQuickActions = state.quickActions.take(LauncherConfig.bottomQuickActionLimit)
     Column(
         modifier = modifier
             .fillMaxSize()
+            .padding(WindowInsets.statusBars.asPaddingValues())
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         if (state.isLoading) {
@@ -79,7 +77,7 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(text = stringResource(id = R.string.drawer_button))
             }
-            Button(onClick = onToggleAiPreview, modifier = Modifier.weight(1f)) {
+            Button(onClick = onOpenSettings, modifier = Modifier.weight(1f)) {
                 Icon(
                     painter = painterResource(id = LauncherIcons.Ai),
                     contentDescription = stringResource(id = R.string.ai_button)
@@ -92,14 +90,6 @@ fun HomeScreen(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        if (navigationInfo.mode == NavigationMode.THREE_BUTTON) {
-            NavigationNotice(info = navigationInfo, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        AiRecommendationPreview(state = state.aiPreview)
-        if (state.aiPreview.isExpanded) {
-            Spacer(modifier = Modifier.height(12.dp))
-        }
         BottomLauncherPanel(
             state = state,
             quickActions = dockQuickActions,

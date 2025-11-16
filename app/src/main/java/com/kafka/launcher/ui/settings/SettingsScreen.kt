@@ -32,8 +32,10 @@ import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.Settings
 import com.kafka.launcher.domain.model.NavigationInfo
 import com.kafka.launcher.domain.model.NavigationMode
+import com.kafka.launcher.launcher.AiPreviewState
 import com.kafka.launcher.ui.components.LauncherIcons
 import com.kafka.launcher.ui.components.NavigationNotice
+import com.kafka.launcher.ui.components.AiRecommendationPreview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +52,7 @@ fun SettingsScreen(
     onGeminiApiKeyInputChange: (String) -> Unit,
     onSaveGeminiApiKey: () -> Unit,
     onClearGeminiApiKey: () -> Unit,
+    aiPreviewState: AiPreviewState,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -105,6 +108,7 @@ fun SettingsScreen(
                 } ?: stringResource(id = R.string.settings_gemini_never)
                 Text(text = geminiText, style = MaterialTheme.typography.bodySmall)
             }
+            AiRecommendationPreview(state = aiPreviewState, modifier = Modifier.fillMaxWidth())
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = stringResource(id = R.string.settings_gemini_api_key_title))
                 OutlinedTextField(

@@ -109,11 +109,6 @@ class LauncherViewModel(
         }
     }
 
-    fun toggleAiPreview() {
-        val current = _state.value.aiPreview
-        _state.update { it.copy(aiPreview = current.copy(isExpanded = !current.isExpanded)) }
-    }
-
     fun onGeminiApiKeyInputChange(value: String) {
         _state.update { it.copy(geminiApiKeyInput = value) }
     }
@@ -215,7 +210,7 @@ class LauncherViewModel(
         val suppressed = snapshot?.suppressions?.toSet() ?: emptySet()
         val filteredQuickActions = filterSuppressed(rawQuickActions, suppressed)
         val (recommendations, windowId) = computeRecommendations(filteredQuickActions, statsSnapshot.value, snapshot)
-        val preview = buildAiPreview(snapshot, filteredQuickActions, _state.value.aiPreview.isExpanded)
+        val preview = buildAiPreview(snapshot, filteredQuickActions)
         _state.update {
             it.copy(
                 quickActions = filteredQuickActions,
@@ -280,11 +275,10 @@ class LauncherViewModel(
 
     private fun buildAiPreview(
         snapshot: GeminiRecommendations?,
-        actions: List<QuickAction>,
-        expanded: Boolean
+        actions: List<QuickAction>
     ): AiPreviewState {
         if (snapshot == null) {
-            return AiPreviewState(isExpanded = expanded)
+            return AiPreviewState()
         }
         val map = actions.associateBy { it.id }
         val windows = snapshot.windows
@@ -305,8 +299,7 @@ class LauncherViewModel(
         return AiPreviewState(
             generatedAt = snapshot.generatedAt,
             windows = windows,
-            rationales = rationales,
-            isExpanded = expanded
+            rationales = rationales
         )
     }
 
