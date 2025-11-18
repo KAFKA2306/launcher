@@ -31,6 +31,18 @@ v4 要件を前提に、実装着手前に決め打ちしておくべき設計�
   - 設定画面の Discord セクションにも常時「通知アクセスが必要です」行を出し、状態に応じて遷移ボタン／許可済み表示を切り替える。
 - 権限未許可時でも DiscordInboxScreen 自体は開け、リスト部分は「権限未許可」のプレースホルダーのみを描画する。
 
+### 4.1 Xiaomi / HyperOS 端末での restricted settings 回避策
+
+- Xiaomi / HyperOS では Play ストア経由で配布されていないアプリに対して restricted settings が発動し、NotificationListenerService の許可トグルが恒久的にグレーアウトされる。KafkaLauncher の Discord 通知機能は**Play ストア扱いのビルド**でのみ実運用できると明記し、サイドロード検証は動作保証外とする。
+- **推奨: Play Console Internal Testing**
+  - `keytool -genkey -v -keystore kafka-launcher.jks -alias kafkaLauncher -keyalg RSA -keysize 2048 -validity 10000` でリリース鍵を生成し、`gradle.properties` と `LauncherConfig` 配下の署名設定経由で参照する。
+  - `./gradlew bundleRelease` で AAB を作成し、Play Console > Testing > Internal testing にアップロードする。
+  - Gmail / Workspace アカウント（最大 100 件）をテスターリストへ登録し、端末側では opt-in URL から Play ストア経由で KafkaLauncher を取得する。Internal track インストールで通知アクセスのロックは解除される。
+- **代替: Device Owner / Work Profile**
+  - 管理端末に対し `dpm set-device-owner` で MDM を適用した後、Managed Google Play 経由で KafkaLauncher を配布する。Device Owner 管理下では restricted settings 判定が緩和されるが、一般ユーザー向けの導線ではない。
+- **一時回避: ADB Policy Override**
+  - 検証端末限定で `adb shell device_config put privacy safety_restrictions_enabled false` と `adb shell appops set com.kafka.launcher android:access_notifications allow` を投入すると一部ビルドで通知アクセスを通せる。OS 更新や再インストールで失効するため、恒久解や配布条件としては採用しない。
+
 ## 5. JS ブリッジ API
 
 Kotlin → JS:
