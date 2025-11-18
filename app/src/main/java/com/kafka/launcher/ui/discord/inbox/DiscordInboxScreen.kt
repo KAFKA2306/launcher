@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.kafka.launcher.domain.model.DiscordNotificationRecord
 import com.kafka.launcher.ui.discord.DiscordViewModel
 import com.kafka.launcher.ui.discord.components.DiscordNotificationRow

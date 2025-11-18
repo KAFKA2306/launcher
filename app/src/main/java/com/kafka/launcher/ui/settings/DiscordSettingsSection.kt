@@ -1,6 +1,5 @@
 package com.kafka.launcher.ui.settings
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

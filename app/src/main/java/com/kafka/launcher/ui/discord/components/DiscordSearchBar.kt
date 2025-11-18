@@ -17,6 +17,6 @@ fun DiscordSearchBar(
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
-        colors = TextFieldDefaults.textFieldColors()
+        colors = TextFieldDefaults.colors()
     )
 }
