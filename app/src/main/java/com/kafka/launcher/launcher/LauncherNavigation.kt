@@ -46,6 +46,7 @@ fun LauncherNavHost(
     onAiAccept: (String) -> Unit,
     onAiDismiss: (String) -> Unit,
     onAiRestore: (String) -> Unit,
+    discordSettingsContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -93,7 +94,8 @@ fun LauncherNavHost(
                 onGeminiApiKeyInputChange = onGeminiApiKeyInputChange,
                 onSaveGeminiApiKey = onSaveGeminiApiKey,
                 onClearGeminiApiKey = onClearGeminiApiKey,
-                aiPreviewState = state.aiPreview
+                aiPreviewState = state.aiPreview,
+                discordSettingsContent = discordSettingsContent
             )
         }
         composable(LauncherDestinations.AI) {

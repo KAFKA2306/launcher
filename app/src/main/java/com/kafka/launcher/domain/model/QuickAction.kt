@@ -20,6 +20,7 @@ enum class ActionType {
     EMAIL_INBOX,
     EMAIL_COMPOSE,
     DISCORD_OPEN,
+    DISCORD_WEBVIEW,
     BROWSER_URL
 }
 

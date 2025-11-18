@@ -1,6 +1,7 @@
 package com.kafka.launcher.quickactions
 
 import android.content.Context
+import com.kafka.launcher.config.DiscordConfig
 import com.kafka.launcher.config.LauncherConfig
 import com.kafka.launcher.domain.model.ActionType
 import com.kafka.launcher.domain.model.QuickAction
@@ -9,12 +10,20 @@ class DiscordModule : QuickActionProvider {
     override val id: String = "discord"
 
     override fun actions(context: Context): List<QuickAction> {
+        val webViewAction = QuickAction(
+            id = DiscordConfig.webModuleId,
+            providerId = id,
+            label = DiscordConfig.webModuleLabel,
+            actionType = ActionType.DISCORD_WEBVIEW,
+            data = DiscordConfig.defaultAppUrl,
+            priority = 6
+        )
         val base = QuickAction(
             id = "discord_open",
             providerId = id,
             label = "Discord",
             actionType = ActionType.DISCORD_OPEN,
-            packageName = LauncherConfig.discordPackageName,
+            packageName = DiscordConfig.packageName,
             priority = 4
         )
         val shortcuts = LauncherConfig.discordShortcuts.map { shortcut ->
@@ -24,10 +33,10 @@ class DiscordModule : QuickActionProvider {
                 label = shortcut.label,
                 actionType = ActionType.BROWSER_URL,
                 data = shortcut.uri,
-                packageName = LauncherConfig.discordPackageName,
+                packageName = DiscordConfig.packageName,
                 priority = shortcut.priority
             )
         }
-        return listOf(base) + shortcuts
+        return listOf(webViewAction, base) + shortcuts
     }
 }

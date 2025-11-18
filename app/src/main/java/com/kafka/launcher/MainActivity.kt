@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import android.provider.Settings
 import com.kafka.launcher.data.local.datastore.settingsDataStore
 import com.kafka.launcher.data.local.db.KafkaDatabase
 import com.kafka.launcher.data.log.ActionLogFileWriter
@@ -31,10 +32,14 @@ import com.kafka.launcher.data.system.NavigationInfoResolver
 import com.kafka.launcher.domain.model.AppSort
 import com.kafka.launcher.domain.model.InstalledApp
 import com.kafka.launcher.domain.model.QuickAction
+import com.kafka.launcher.domain.discord.DiscordInteractor
+import com.kafka.launcher.domain.usecase.NormalizeDiscordDisplayNameUseCase
+import com.kafka.launcher.domain.usecase.ParseDiscordChannelKeyUseCase
 import com.kafka.launcher.domain.usecase.RecommendActionsUseCase
 import com.kafka.launcher.launcher.AiSyncStageKey
 import com.kafka.launcher.launcher.AiSyncStatus
 import com.kafka.launcher.config.GeminiConfig
+import com.kafka.launcher.launcher.DiscordProvider
 import com.kafka.launcher.launcher.LauncherNavHost
 import com.kafka.launcher.launcher.LauncherState
 import com.kafka.launcher.launcher.LauncherViewModel
@@ -46,7 +51,11 @@ import com.kafka.launcher.quickactions.GmailModule
 import com.kafka.launcher.quickactions.GoogleCalendarModule
 import com.kafka.launcher.quickactions.GoogleMapsModule
 import com.kafka.launcher.quickactions.QuickActionExecutor
+import com.kafka.launcher.ui.discord.DiscordViewModel
+import com.kafka.launcher.ui.discord.DiscordViewModelFactory
+import com.kafka.launcher.ui.settings.DiscordSettingsSection
 import com.kafka.launcher.ui.theme.KafkaLauncherTheme
+import com.kafka.launcher.ui.components.rememberNotificationAccessState
 
 class MainActivity : ComponentActivity() {
     private val auditLogger by lazy { QuickActionAuditLogger(applicationContext) }
@@ -54,6 +63,14 @@ class MainActivity : ComponentActivity() {
     private val geminiStore by lazy { GeminiRecommendationStore(applicationContext) }
     private val geminiApiKeyStore by lazy { GeminiApiKeyStore(applicationContext) }
     private val quickActionCatalogStore by lazy { QuickActionCatalogStore(applicationContext) }
+    private val discordRepository by lazy { DiscordProvider.create(applicationContext) }
+    private val discordInteractor by lazy {
+        DiscordInteractor(
+            repository = discordRepository,
+            parseChannelKey = ParseDiscordChannelKeyUseCase(),
+            normalizeDisplayName = NormalizeDiscordDisplayNameUseCase()
+        )
+    }
     private val launcherViewModel: LauncherViewModel by lazy {
         val appContext = applicationContext
         val database = KafkaDatabase.build(appContext)
@@ -82,6 +99,10 @@ class MainActivity : ComponentActivity() {
             quickActionCatalogStore = quickActionCatalogStore
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
+    }
+    private val discordViewModel: DiscordViewModel by lazy {
+        val factory = DiscordViewModelFactory(discordInteractor)
+        ViewModelProvider(this, factory)[DiscordViewModel::class.java]
     }
 
     private val quickActionExecutor by lazy { QuickActionExecutor(this, auditLogger, quickActionCatalogStore) }
@@ -122,7 +143,15 @@ class MainActivity : ComponentActivity() {
                 },
                 onAiAccept = launcherViewModel::acceptAiAction,
                 onAiDismiss = launcherViewModel::dismissAiAction,
-                onAiRestore = launcherViewModel::restoreAiAction
+                onAiRestore = launcherViewModel::restoreAiAction,
+                discordSettingsContent = {
+                    val notificationAccess by rememberNotificationAccessState()
+                    DiscordSettingsSection(
+                        viewModel = discordViewModel,
+                        notificationPermissionGranted = notificationAccess,
+                        onOpenNotificationSettings = ::openNotificationAccessSettings
+                    )
+                }
             )
         }
     }
@@ -156,6 +185,11 @@ class MainActivity : ComponentActivity() {
         if (!roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) return
         if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) return
         roleLauncher.launch(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+    }
+
+    private fun openNotificationAccessSettings() {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
     }
 
     private fun observeGeminiWork() {
@@ -208,7 +242,8 @@ private fun KafkaLauncherApp(
     onAiRefresh: () -> Unit,
     onAiAccept: (String) -> Unit,
     onAiDismiss: (String) -> Unit,
-    onAiRestore: (String) -> Unit
+    onAiRestore: (String) -> Unit,
+    discordSettingsContent: @Composable () -> Unit
 ) {
     KafkaLauncherTheme {
         LauncherNavHost(
@@ -230,7 +265,8 @@ private fun KafkaLauncherApp(
             onAiRefresh = onAiRefresh,
             onAiAccept = onAiAccept,
             onAiDismiss = onAiDismiss,
-            onAiRestore = onAiRestore
+            onAiRestore = onAiRestore,
+            discordSettingsContent = discordSettingsContent
         )
     }
 }

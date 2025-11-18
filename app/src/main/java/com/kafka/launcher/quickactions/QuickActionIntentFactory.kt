@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import androidx.core.net.toUri
+import com.kafka.launcher.discord.DiscordActivity
 import com.kafka.launcher.domain.model.ActionType
 import com.kafka.launcher.domain.model.QuickAction
 
@@ -22,6 +23,7 @@ class QuickActionIntentFactory(private val context: Context) {
             ActionType.CALENDAR_INSERT -> insertCalendar(action.packageName)
             ActionType.EMAIL_COMPOSE -> composeEmail(action.packageName)
             ActionType.BROWSER_URL -> openUrl(action.data ?: "", action.packageName)
+            ActionType.DISCORD_WEBVIEW -> openDiscordWebView(action.data)
         }
     }
 
@@ -55,6 +57,14 @@ class QuickActionIntentFactory(private val context: Context) {
     private fun composeEmail(packageName: String?): Intent? {
         val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return preferPackage(intent, packageName)
+    }
+
+    private fun openDiscordWebView(initialUrl: String?): Intent {
+        val intent = Intent(context, DiscordActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (!initialUrl.isNullOrBlank()) {
+            intent.putExtra(DiscordActivity.EXTRA_INITIAL_URL, initialUrl)
+        }
+        return intent
     }
 
     private fun preferPackage(intent: Intent, packageName: String?): Intent? {

@@ -7,6 +7,7 @@ KafkaLauncher の仕様・検討資料を配置する。主要ドキュメント
 - `design/gemini_feedback_loop.md`: Gemini Sync Worker / Payload / Store / UI 連携の決定版仕様。WorkManager 周期や DataStore 形式を変更した場合は最初に更新する。
 - `design/kafkalauncher_detail_spec.md`: 画面仕様・状態遷移を集約。Compose コンポーネント変更時はここを基準に差分チェックする。
 - `design/launcher_gesture_support.md`: ナビゲーションモード検出や OEM 制約のメモ。`NavigationNotice` の表示条件を変える際に参照する。
+- `design/discord_webview_v4.md`: Discord WebView / 通知ミラー / QuickAccess ランキングの決定版仕様。URL 正規化キーや JS ブリッジ API を変更する際は必ず更新し、ログ収集ポリシーも本書に従う。
 
 ## 更新フロー
 

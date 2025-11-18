@@ -59,22 +59,20 @@ object LauncherConfig {
     val gestureUnsupportedManufacturers = setOf("xiaomi")
     const val appUsagePrefix = "app:"
     val defaultAppSort = AppSort.USAGE
-    const val discordPackageName = "com.discord"
     const val aiQuickActionProviderId = "ai.gemini"
     const val aiQuickActionPrefix = "qa."
     const val aiQuickActionPriority = 4
-    private const val discordChannelBaseUrl = "https://discord.com/channels"
     val discordShortcuts = listOf(
         DiscordShortcut(
             id = "discord_dm_inbox",
             label = "Discord DM一覧",
-            uri = "$discordChannelBaseUrl/@me",
+            uri = "${DiscordConfig.channelBaseUrl}/@me",
             priority = 3
         ),
         DiscordShortcut(
             id = "discord_testers_faq",
             label = "Discord Testers #faq",
-            uri = "$discordChannelBaseUrl/81384788765712384/82027497244617984",
+            uri = "${DiscordConfig.channelBaseUrl}/81384788765712384/82027497244617984",
             priority = 1
         )
     )

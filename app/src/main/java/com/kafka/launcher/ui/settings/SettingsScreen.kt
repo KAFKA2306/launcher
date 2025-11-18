@@ -53,6 +53,7 @@ fun SettingsScreen(
     onSaveGeminiApiKey: () -> Unit,
     onClearGeminiApiKey: () -> Unit,
     aiPreviewState: AiPreviewState,
+    discordSettingsContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -146,6 +147,7 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            discordSettingsContent()
         }
     }
 }

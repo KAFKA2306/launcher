@@ -132,6 +132,7 @@ class QuickActionCatalogStore(context: Context) {
             "CALENDAR_INSERT" -> ActionType.CALENDAR_INSERT
             "BROWSER_URL" -> ActionType.BROWSER_URL
             "DISCORD_OPEN" -> ActionType.DISCORD_OPEN
+            "DISCORD_WEBVIEW" -> ActionType.DISCORD_WEBVIEW
             else -> null
         }
     }
