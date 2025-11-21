@@ -21,8 +21,8 @@ object LauncherConfig {
     const val actionLogRecentFileName = "action_recent.json"
     const val actionLogStatsFileName = "action_stats.json"
     const val statsLimit = 50
-    const val favoritesLimit = 5
-    const val recentLimit = 12
+    const val favoritesLimit = 15
+    const val recentLimit = 24
     const val appsPerRow = 8
     const val categoryPreviewLimit = 4
     const val bottomQuickActionLimit = 6

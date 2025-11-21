@@ -23,6 +23,8 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 - `task assembleDebug`
 - `task lint`
 - `task build`
+- `task commit -- MESSAGE="chore: update"` 撮りこぼしなくステージしてコミットする
+- `task all` で lint → build を連続実行する
 
 ## 1. 画面と機能
 

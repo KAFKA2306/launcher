@@ -22,6 +22,7 @@ import com.kafka.launcher.data.log.ActionLogFileWriter
 import com.kafka.launcher.data.log.QuickActionAuditLogger
 import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.repo.ActionLogRepository
+import com.kafka.launcher.data.repo.AiModelRepository
 import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
@@ -96,7 +97,8 @@ class MainActivity : ComponentActivity() {
             navigationInfo = navigationInfo,
             geminiRecommendationStore = geminiStore,
             geminiApiKeyStore = geminiApiKeyStore,
-            quickActionCatalogStore = quickActionCatalogStore
+            quickActionCatalogStore = quickActionCatalogStore,
+            aiModelRepository = AiModelRepository(database.aiModelDao())
         )
         ViewModelProvider(this, factory)[LauncherViewModel::class.java]
     }

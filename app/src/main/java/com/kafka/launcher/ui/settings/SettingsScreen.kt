@@ -54,6 +54,7 @@ fun SettingsScreen(
     onClearGeminiApiKey: () -> Unit,
     aiPreviewState: AiPreviewState,
     discordSettingsContent: @Composable () -> Unit,
+    onOpenAiHub: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -110,6 +111,12 @@ fun SettingsScreen(
                 Text(text = geminiText, style = MaterialTheme.typography.bodySmall)
             }
             AiRecommendationPreview(state = aiPreviewState, modifier = Modifier.fillMaxWidth())
+            Button(
+                onClick = onOpenAiHub,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Manage AI Models")
+            }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = stringResource(id = R.string.settings_gemini_api_key_title))
                 OutlinedTextField(

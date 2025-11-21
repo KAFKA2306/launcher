@@ -60,6 +60,12 @@ class DiscordRepository(
         }
     }
 
+    suspend fun deleteChannel(channelId: String) {
+        channelStore.update { list ->
+            list.filterNot { it.id == channelId }
+        }
+    }
+
     suspend fun setChannelFavorite(channelId: String, favorite: Boolean) {
         channelStore.update { list ->
             list.map { if (it.id == channelId) it.copy(favorite = favorite) else it }

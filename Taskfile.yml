@@ -2,12 +2,11 @@ version: '3'
 vars:
     GRADLE: ./gradlew
 tasks:
-    assembleDebug:
-        cmds:
-            - "{{.GRADLE}} assembleDebug"
-    lint:
-        cmds:
-            - "{{.GRADLE}} lint"
     build:
         cmds:
+            - uv run ruff check . --fix
+            - uv run ruff format .
+            - "{{.GRADLE}} lint"
             - "{{.GRADLE}} clean build"
+            - git add .
+            - git commit -m "{{.MESSAGE}}"

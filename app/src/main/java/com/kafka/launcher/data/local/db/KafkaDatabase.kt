@@ -5,10 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.kafka.launcher.domain.model.ActionLog
+import com.kafka.launcher.domain.model.AiModel
 
-@Database(entities = [ActionLog::class], version = 1, exportSchema = false)
+@Database(entities = [ActionLog::class, AiModel::class], version = 2, exportSchema = false)
 abstract class KafkaDatabase : RoomDatabase() {
     abstract fun actionLogDao(): ActionLogDao
+    abstract fun aiModelDao(): AiModelDao
 
     companion object {
         fun build(context: Context): KafkaDatabase = Room.databaseBuilder(

@@ -23,6 +23,7 @@ object LauncherDestinations {
     const val DRAWER = "drawer"
     const val SETTINGS = "settings"
     const val AI = "ai"
+    const val AI_HUB = "ai_hub"
 }
 
 @Composable
@@ -95,7 +96,8 @@ fun LauncherNavHost(
                 onSaveGeminiApiKey = onSaveGeminiApiKey,
                 onClearGeminiApiKey = onClearGeminiApiKey,
                 aiPreviewState = state.aiPreview,
-                discordSettingsContent = discordSettingsContent
+                discordSettingsContent = discordSettingsContent,
+                onOpenAiHub = { navController.navigate(LauncherDestinations.AI_HUB) }
             )
         }
         composable(LauncherDestinations.AI) {
@@ -106,6 +108,11 @@ fun LauncherNavHost(
                 onAccept = onAiAccept,
                 onDismiss = onAiDismiss,
                 onRestore = onAiRestore
+            )
+        }
+        composable(LauncherDestinations.AI_HUB) {
+            com.kafka.launcher.ui.aihub.AiHubScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

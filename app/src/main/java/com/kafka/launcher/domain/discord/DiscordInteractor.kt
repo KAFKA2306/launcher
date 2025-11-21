@@ -36,6 +36,10 @@ class DiscordInteractor(
         repository.setChannelFavorite(channelId, favorite)
     }
 
+    suspend fun deleteChannel(channelId: String) {
+        repository.deleteChannel(channelId)
+    }
+
     suspend fun recordOpen(url: String, timestamp: Long) {
         val key = keyFromUrl(url) ?: return
         repository.incrementOpenCount(key, timestamp)

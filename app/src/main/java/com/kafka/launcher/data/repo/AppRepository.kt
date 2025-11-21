@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import com.kafka.launcher.config.AppSearchConfig
 import com.kafka.launcher.domain.model.AppCategory
 import com.kafka.launcher.domain.model.InstalledApp
 import kotlinx.coroutines.Dispatchers
@@ -35,8 +36,23 @@ class AppRepository(private val context: Context) {
 
     fun filter(apps: List<InstalledApp>, query: String): List<InstalledApp> {
         if (query.isBlank()) return apps
-        val lower = query.lowercase(Locale.getDefault())
-        return apps.filter { it.label.lowercase(Locale.getDefault()).contains(lower) }
+        val lowerQuery = query.lowercase(Locale.getDefault())
+        
+        // 1. Direct match
+        val directMatches = apps.filter { it.label.lowercase(Locale.getDefault()).contains(lowerQuery) }
+        
+        // 2. Alias match
+        val aliasTargets = AppSearchConfig.aliases.filterKeys { it.contains(lowerQuery) }.values.flatten().toSet()
+        val aliasMatches = if (aliasTargets.isNotEmpty()) {
+            apps.filter { app ->
+                val lowerLabel = app.label.lowercase(Locale.getDefault())
+                aliasTargets.any { target -> lowerLabel.contains(target) }
+            }
+        } else {
+            emptyList()
+        }
+
+        return (directMatches + aliasMatches).distinctBy { it.packageName }
     }
 
     private fun resolveCategory(code: Int): AppCategory {

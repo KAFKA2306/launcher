@@ -60,6 +60,18 @@ class DiscordViewModel(
         }
     }
 
+    fun renameChannel(channel: DiscordChannel, newLabel: String) {
+        viewModelScope.launch {
+            interactor.addChannel(channel.copy(label = newLabel))
+        }
+    }
+
+    fun deleteChannel(channelId: String) {
+        viewModelScope.launch {
+            interactor.deleteChannel(channelId)
+        }
+    }
+
     fun saveMuted(entries: List<String>) {
         viewModelScope.launch {
             interactor.setMutedNames(entries)

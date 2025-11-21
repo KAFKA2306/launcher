@@ -7,6 +7,7 @@ import com.kafka.launcher.data.repo.AppRepository
 import com.kafka.launcher.data.repo.PinnedAppsRepository
 import com.kafka.launcher.data.repo.QuickActionRepository
 import com.kafka.launcher.data.repo.SettingsRepository
+import com.kafka.launcher.data.repo.AiModelRepository
 import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.store.GeminiRecommendationStore
 import com.kafka.launcher.data.store.GeminiApiKeyStore
@@ -23,7 +24,8 @@ class LauncherViewModelFactory(
     private val pinnedAppsRepository: PinnedAppsRepository,
     private val geminiRecommendationStore: GeminiRecommendationStore,
     private val geminiApiKeyStore: GeminiApiKeyStore,
-    private val quickActionCatalogStore: QuickActionCatalogStore
+    private val quickActionCatalogStore: QuickActionCatalogStore,
+    private val aiModelRepository: AiModelRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -41,6 +43,9 @@ class LauncherViewModelFactory(
                 geminiApiKeyStore = geminiApiKeyStore,
                 quickActionCatalogStore = quickActionCatalogStore
             ) as T
+        }
+        if (modelClass.isAssignableFrom(AiHubViewModel::class.java)) {
+            return AiHubViewModel(aiModelRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
