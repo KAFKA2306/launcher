@@ -19,6 +19,70 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 署名キーストアは `local.properties` で `launcherRelease*` エントリを指定して Gradle へ渡します。
 
+## 0.1 Windows 環境セットアップ（PowerShell）
+
+Windows で開発する場合の完全なセットアップ手順です。
+
+### 1. Java 17 (JDK) のインストール
+
+```powershell
+scoop bucket add java
+scoop install temurin17-jdk
+$JAVA = (scoop prefix temurin17-jdk)
+[Environment]::SetEnvironmentVariable('JAVA_HOME', $JAVA, 'User')
+$env:JAVA_HOME = $JAVA
+$env:Path = "$JAVA\bin;" + $env:Path
+java -version
+```
+
+### 2. Android コマンドラインツールのインストール
+
+```powershell
+scoop install android-clt
+$SDK = (scoop prefix android-clt)
+[Environment]::SetEnvironmentVariable('ANDROID_HOME', $SDK, 'User')
+[Environment]::SetEnvironmentVariable('ANDROID_SDK_ROOT', $SDK, 'User')
+$env:ANDROID_HOME = $SDK
+$env:ANDROID_SDK_ROOT = $SDK
+$env:Path = "$SDK\cmdline-tools\latest\bin;$SDK\platform-tools;$SDK\emulator;" + $env:Path
+```
+
+### 3. SDK コンポーネントのインストール
+
+```powershell
+sdkmanager --sdk_root=$env:ANDROID_SDK_ROOT `
+  "platform-tools" `
+  "emulator" `
+  "platforms;android-35" `
+  "system-images;android-35;google_apis;x86_64" `
+  "cmdline-tools;latest"
+
+# ライセンス承認
+sdkmanager --licenses --sdk_root=$env:ANDROID_SDK_ROOT
+```
+
+### 4. AVD 作成とエミュレータ起動
+
+```powershell
+# AVD 作成
+avdmanager create avd -n Pixel_Fold_API_35 `
+  -k "system-images;android-35;google_apis;x86_64" `
+  --device "pixel_fold"
+
+# エミュレータ起動
+& "$env:ANDROID_HOME\emulator\emulator.exe" `
+  -avd Pixel_Fold_API_35 `
+  -no-snapshot-load `
+  -no-audio
+```
+
+### 5. ビルド確認
+
+```powershell
+cd Z:\home\kafka\projects\launcher
+.\gradlew assembleDebug
+```
+
 ### Task 実行
 
 - `task assembleDebug`
