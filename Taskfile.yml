@@ -3,6 +3,7 @@ version: '3'
 vars:
   APK: app/build/outputs/apk/debug/app-debug.apk
   AVD: Pixel_7_API_35
+  WIN_PROJECT: C:\Users\{{.USERNAME}}\projects\launcher
 
 tasks:
   default:
@@ -10,34 +11,35 @@ tasks:
     cmds:
       - task --list
 
+  # WSL/Linux tasks (use ./gradlew)
   fmt:
-    desc: Format code
+    desc: Format code (WSL/Linux)
     cmds:
       - uv run ruff check . --fix
       - uv run ruff format .
 
   test:
-    desc: Run unit tests
+    desc: Run unit tests (WSL/Linux)
     cmds:
-      - powershell -c ".\gradlew.bat testDebugUnitTest"
+      - ./gradlew testDebugUnitTest
 
   lint:
-    desc: Run lint checks
+    desc: Run lint checks (WSL/Linux)
     cmds:
-      - powershell -c ".\gradlew.bat lint"
+      - ./gradlew lint
 
   build:
-    desc: Build debug APK
+    desc: Build debug APK (WSL/Linux)
     cmds:
-      - powershell -c ".\gradlew.bat assembleDebug"
+      - ./gradlew assembleDebug
 
   clean:
-    desc: Clean build artifacts
+    desc: Clean build artifacts (WSL/Linux)
     cmds:
-      - powershell -c ".\gradlew.bat clean"
+      - ./gradlew clean
 
   full:
-    desc: Format, lint, test, and build
+    desc: Format, lint, test, and build (WSL/Linux)
     cmds:
       - task: fmt
       - task: lint
@@ -51,24 +53,38 @@ tasks:
       - git commit -m "{{.MESSAGE}}"
 
   push:
-    desc: Full build, commit, and push
+    desc: Full build, commit, and push (WSL/Linux)
     cmds:
       - task: full
       - task: commit
         vars: {MESSAGE: "{{.MESSAGE}}"}
       - git push
 
-  emu:
-    desc: Start emulator and install APK
+  # Windows-specific tasks
+  win-setup:
+    desc: Copy project to Windows side
     cmds:
-      - task: build
-      - $ANDROID_HOME/emulator/emulator -avd {{.AVD}} -no-snapshot-load -no-audio &
-      - sleep 30
-      - adb wait-for-device
-      - adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
-      - adb install -r {{.APK}}
+      - powershell -c "New-Item -ItemType Directory -Force -Path C:\Users\$env:USERNAME\projects"
+      - powershell -c "Copy-Item -Recurse -Force . C:\Users\$env:USERNAME\projects\launcher"
+      - echo "Project copied to C:\Users\$env:USERNAME\projects\launcher"
+
+  win-build:
+    desc: Build APK on Windows side
+    dir: C:\Users\{{env "USERNAME"}}\projects\launcher
+    cmds:
+      - powershell -c ".\gradlew.bat assembleDebug"
+
+  win-emu:
+    desc: Start emulator and install APK (Windows)
+    cmds:
+      - powershell -c "& '$env:ANDROID_HOME\emulator\emulator.exe' -avd {{.AVD}} -no-snapshot-load -no-audio &"
+      - powershell -c "Start-Sleep -Seconds 30"
+      - powershell -c "adb wait-for-device"
+      - powershell -c "adb shell 'while [ `$(getprop sys.boot_completed) != 1 ]; do sleep 1; done'"
+      - powershell -c "adb install -r C:\Users\$env:USERNAME\projects\launcher\{{.APK}}"
       - echo "Ready. Run 'task log' to capture logs"
 
+  # Shared tasks
   log:
     desc: Capture logcat to crash.log
     cmds:
@@ -79,3 +95,10 @@ tasks:
     desc: Install APK on connected device
     cmds:
       - adb install -r {{.APK}}
+
+  # Hybrid workflow (WSL build + Windows emulator)
+  emu:
+    desc: Build in WSL, run emulator on Windows
+    cmds:
+      - ./gradlew assembleDebug
+      - echo "APK built. Use 'task win-emu' on Windows PowerShell to run emulator"
