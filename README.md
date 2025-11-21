@@ -98,7 +98,7 @@ task push -- MESSAGE="fix: bug"
 task win-from-wsl
 ```
 
-**`task win-from-wsl`** で完全自動：初回セットアップ → 最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定
+**`task win-from-wsl`** はリポジトリ全体を `/mnt/c/Users/front/projects/launcher` に rsync した上で Windows 側の `task win` を呼び出し、セットアップ → コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定まで自動化
 
 ## 1. 画面と機能
 

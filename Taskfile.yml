@@ -64,15 +64,9 @@ tasks:
   win-from-wsl:
     desc: Test on Windows emulator (run from WSL)
     cmds:
-      - echo "Setting up Windows environment..."
       - mkdir -p /mnt/c/Users/front/projects/launcher
-      - cp -f Taskfile.yml /mnt/c/Users/front/projects/launcher/
-      - echo "Syncing latest code..."
-      - rsync -a --exclude='.git' --exclude='build' app/ /mnt/c/Users/front/projects/launcher/app/
-      - echo "Running automated test on Windows..."
-      - |
-        cd /mnt/c/Users/front/projects/launcher && \
-        powershell.exe -c "Write-Host 'Building APK...'; .\\gradlew.bat assembleDebug; Write-Host 'Restarting adb...'; adb kill-server; adb start-server; adb wait-for-device; Write-Host 'Installing...'; adb install -r {{.APK}}; Write-Host 'Launching...'; adb shell am start -n {{.PKG}}/com.kafka.launcher.MainActivity; Write-Host 'Capturing logs...'; adb logcat -c; Start-Job -ScriptBlock { adb logcat } | Wait-Job -Timeout 10 | Receive-Job > crash.log; if (Select-String -Path crash.log -Pattern 'FATAL|AndroidRuntime') { Write-Host 'CRASH DETECTED!' -ForegroundColor Red } else { Write-Host 'No crash detected' -ForegroundColor Green }"
+      - rsync -a --exclude='.git' --exclude='build' --exclude='app/build' ./ /mnt/c/Users/front/projects/launcher/
+      - task: win
 
   # Windows: ONE COMMAND (run from Windows PowerShell)
   win:
