@@ -3,7 +3,7 @@ version: '3'
 vars:
   APK: app/build/outputs/apk/debug/app-debug.apk
   AVD: Pixel_7_API_35
-  WIN_PROJECT: C:\Users\{{.USERNAME}}\projects\launcher
+  PKG: com.kafka.launcher.debug
 
 tasks:
   default:
@@ -11,35 +11,35 @@ tasks:
     cmds:
       - task --list
 
-  # WSL/Linux tasks (use ./gradlew)
+  # WSL/Linux tasks
   fmt:
-    desc: Format code (WSL/Linux)
+    desc: Format code
     cmds:
       - uv run ruff check . --fix
       - uv run ruff format .
 
   test:
-    desc: Run unit tests (WSL/Linux)
+    desc: Run unit tests
     cmds:
       - ./gradlew testDebugUnitTest
 
   lint:
-    desc: Run lint checks (WSL/Linux)
+    desc: Run lint checks
     cmds:
       - ./gradlew lint
 
   build:
-    desc: Build debug APK (WSL/Linux)
+    desc: Build debug APK
     cmds:
       - ./gradlew assembleDebug
 
   clean:
-    desc: Clean build artifacts (WSL/Linux)
+    desc: Clean build artifacts
     cmds:
       - ./gradlew clean
 
   full:
-    desc: Format, lint, test, and build (WSL/Linux)
+    desc: Format, lint, test, and build
     cmds:
       - task: fmt
       - task: lint
@@ -53,52 +53,74 @@ tasks:
       - git commit -m "{{.MESSAGE}}"
 
   push:
-    desc: Full build, commit, and push (WSL/Linux)
+    desc: Full build, commit, and push
     cmds:
       - task: full
       - task: commit
         vars: {MESSAGE: "{{.MESSAGE}}"}
       - git push
 
-  # Windows-specific tasks
+  # Windows tasks (run from Windows PowerShell)
   win-setup:
     desc: Copy project to Windows side
     cmds:
-      - powershell -c "New-Item -ItemType Directory -Force -Path C:\Users\$env:USERNAME\projects"
-      - powershell -c "Copy-Item -Recurse -Force . C:\Users\$env:USERNAME\projects\launcher"
-      - echo "Project copied to C:\Users\$env:USERNAME\projects\launcher"
-
-  win-build:
-    desc: Build APK on Windows side
-    dir: C:\Users\{{env "USERNAME"}}\projects\launcher
-    cmds:
-      - powershell -c ".\gradlew.bat assembleDebug"
+      - powershell -c "New-Item -ItemType Directory -Force -Path C:\\Users\\$env:USERNAME\\projects"
+      - powershell -c "Copy-Item -Recurse -Force . C:\\Users\\$env:USERNAME\\projects\\launcher"
+      - echo "Project copied to C:\\Users\\$env:USERNAME\\projects\\launcher"
 
   win-emu:
-    desc: Start emulator and install APK (Windows)
+    desc: Start emulator (Windows only)
     cmds:
-      - powershell -c "Start-Process -FilePath $env:ANDROID_HOME\emulator\emulator.exe -ArgumentList '-avd {{.AVD}} -no-snapshot-load -no-audio' -NoNewWindow"
-      - powershell -c "Start-Sleep -Seconds 30"
+      - powershell -c "Start-Process -FilePath $env:ANDROID_HOME\\emulator\\emulator.exe -ArgumentList '-avd {{.AVD}} -no-snapshot-load -no-audio' -NoNewWindow"
+      - echo "Emulator starting... Wait for boot to complete"
+
+  win-build:
+    desc: Build APK (Windows only)
+    cmds:
+      - powershell -c ".\\gradlew.bat assembleDebug"
+
+  win-install:
+    desc: Install APK to emulator (Windows only)
+    cmds:
+      - powershell -c "adb kill-server; adb start-server"
       - powershell -c "adb wait-for-device"
-      - powershell -c "adb shell 'while [ \"`$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done'"
       - powershell -c "adb install -r {{.APK}}"
-      - echo "Ready. Run 'task log' to capture logs"
+      - echo "APK installed successfully"
+
+  win-launch:
+    desc: Launch app on emulator (Windows only)
+    cmds:
+      - powershell -c "adb shell am start -n {{.PKG}}/com.kafka.launcher.MainActivity"
+
+  win-log:
+    desc: Capture crash log (Windows only)
+    cmds:
+      - powershell -c "adb logcat -c"
+      - powershell -c "adb logcat > crash.log"
+
+  win-full:
+    desc: Complete Windows workflow
+    cmds:
+      - task: win-build
+      - task: win-emu
+      - powershell -c "Start-Sleep -Seconds 40"
+      - task: win-install
+      - task: win-launch
+      - echo "App launched. Run 'task win-log' if needed"
 
   # Shared tasks
-  log:
-    desc: Capture logcat to crash.log
-    cmds:
-      - adb logcat -c
-      - adb logcat > crash.log
-
   install:
     desc: Install APK on connected device
     cmds:
       - adb install -r {{.APK}}
 
-  # Hybrid workflow (WSL build + Windows emulator)
-  emu:
-    desc: Build in WSL, run emulator on Windows
+  launch:
+    desc: Launch app on connected device
     cmds:
-      - ./gradlew assembleDebug
-      - echo "APK built. Use 'task win-emu' on Windows PowerShell to run emulator"
+      - adb shell am start -n {{.PKG}}/com.kafka.launcher.MainActivity
+
+  log:
+    desc: Capture logcat to crash.log
+    cmds:
+      - adb logcat -c
+      - adb logcat > crash.log

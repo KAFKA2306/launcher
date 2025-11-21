@@ -91,11 +91,11 @@ task build          # APK ビルド
 task test           # テスト実行
 task lint           # Lint 実行
 task full           # 完全ビルド（fmt + lint + test + build）
-task commit -- MESSAGE="feat: add feature"  # コミット
-task push -- MESSAGE="fix: bug"             # 完全ビルド + コミット + プッシュ
+task commit -- MESSAGE="feat: add feature"
+task push -- MESSAGE="fix: bug"
 ```
 
-#### Windows での実行
+#### Windows での実行（推奨ワークフロー）
 
 **初回のみ**: プロジェクトをWindows側にコピー
 ```powershell
@@ -103,22 +103,37 @@ task push -- MESSAGE="fix: bug"             # 完全ビルド + コミット + �
 task win-setup
 ```
 
-**エミュレータでテスト**: Windows PowerShellで実行
+**完全ワークフロー**: Windows PowerShellで実行
 ```powershell
 cd C:\Users\$env:USERNAME\projects\launcher
-task win-emu        # エミュレータ起動 + APK インストール
-task log            # クラッシュログ取得
+
+# 方法1: 一括実行（推奨）
+task win-full       # ビルド → エミュレータ起動 → インストール → アプリ起動
+
+# 方法2: 段階的実行
+task win-build      # APKビルド
+task win-emu        # エミュレータ起動
+# 40秒待機（エミュレータのブート完了）
+task win-install    # APKインストール（adbサーバー自動再起動）
+task win-launch     # アプリ起動
+task win-log        # クラッシュログ取得（必要な場合）
 ```
 
-#### ハイブリッドワークフロー（推奨）
-WSL側で開発・ビルドし、Windows側でエミュレータテスト：
+#### トラブルシューティング
 
-```bash
-# WSL: コード編集 + ビルド
-task build
+**adbがデバイスを認識しない場合**:
+```powershell
+adb kill-server
+adb start-server
+adb devices
+```
 
-# Windows PowerShell: エミュレータテスト
-task win-emu
+**AVDが見つからない場合**:
+```powershell
+# AVD作成（Pixel_7_API_35）
+avdmanager create avd -n Pixel_7_API_35 `
+  -k "system-images;android-35;google_apis;x86_64" `
+  --device "pixel_8"
 ```
 
 ## 1. 画面と機能

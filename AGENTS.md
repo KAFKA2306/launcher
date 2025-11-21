@@ -9,15 +9,31 @@
 - 補足資料や仕様書は `docs/`（例: `docs/3C.md`, `docs/design/`）に追加し、PR 説明から必ずリンクしてください。
 
 ## ビルド・開発コマンド
-- `./gradlew assembleDebug` — デバッグ APK を生成し、実機 / エミュレーター検証に使用。
-- `./gradlew lint` — Lint を走らせ API レベルや未使用リソースを検出。ブロッカーがない状態でレビューへ進めます。
-- `./gradlew clean build` — キャッシュをクリアし Debug/Release 両方を再生成。リリース前や CI での信頼できるスナップショットに使います。
-- `./gradlew testDebugUnitTest` — Robolectric を使った単体テストを実行。
+
+### WSL/Linux
+- `./gradlew assembleDebug` — デバッグ APK を生成
+- `./gradlew lint` — Lint 実行
+- `./gradlew clean build` — 完全リビルド
+- `./gradlew testDebugUnitTest` — Robolectric 単体テスト
+
+### Windows（Task コマンド）
+- `task win-full` — ビルド → エミュレータ起動 → インストール → アプリ起動（一括）
+- `task win-install` — APK インストール（adb サーバー自動再起動）
+- `task win-launch` — アプリ起動
+- `task win-log` — クラッシュログ取得
 
 ## テスト環境
-- Robolectric 4.15 を使用した Activity 起動テストを `app/src/test/` に配置。
-- デバッグビルドは `isMinifyEnabled = false` と `isDebuggable = true` に設定し、テストとデバッグを容易にしています。
-- WSL2 環境ではエミュレータが動作しないため、実機での検証が必要です。
+
+### WSL/Linux
+- Robolectric 4.15 を使用した Activity 起動テストを `app/src/test/` に配置
+- デバッグビルドは `isMinifyEnabled = false` と `isDebuggable = true` に設定
+
+### Windows エミュレータテスト
+- **環境**: Windows PowerShell + Android SDK (android-clt) + Java 17
+- **AVD**: Pixel_7_API_35 (Android 35, Google APIs, x86_64)
+- **重要**: エミュレータ起動後、adb サーバーの再起動が必要（`adb kill-server && adb start-server`）
+- **アプリ起動**: `adb shell am start -n com.kafka.launcher.debug/com.kafka.launcher.MainActivity`
+- **トラブルシューティング**: README.md の「トラブルシューティング」セクション参照
 
 ## コーディングスタイルと命名規約
 - Kotlin は 4 スペースインデント、`val` 優先、`when`/`sealed interface` で分岐を明示します。長い関数は 60 行以内を目安に分割してください。
