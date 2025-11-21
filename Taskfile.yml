@@ -77,11 +77,11 @@ tasks:
   win-emu:
     desc: Start emulator and install APK (Windows)
     cmds:
-      - powershell -c "& '$env:ANDROID_HOME\emulator\emulator.exe' -avd {{.AVD}} -no-snapshot-load -no-audio &"
+      - powershell -c "Start-Process -FilePath $env:ANDROID_HOME\emulator\emulator.exe -ArgumentList '-avd {{.AVD}} -no-snapshot-load -no-audio' -NoNewWindow"
       - powershell -c "Start-Sleep -Seconds 30"
       - powershell -c "adb wait-for-device"
-      - powershell -c "adb shell 'while [ `$(getprop sys.boot_completed) != 1 ]; do sleep 1; done'"
-      - powershell -c "adb install -r C:\Users\$env:USERNAME\projects\launcher\{{.APK}}"
+      - powershell -c "adb shell 'while [ \"`$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done'"
+      - powershell -c "adb install -r {{.APK}}"
       - echo "Ready. Run 'task log' to capture logs"
 
   # Shared tasks
