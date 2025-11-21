@@ -19,22 +19,22 @@ tasks:
   test:
     desc: Run unit tests
     cmds:
-      - .\gradlew.bat testDebugUnitTest
+      - powershell -c ".\gradlew.bat testDebugUnitTest"
 
   lint:
     desc: Run lint checks
     cmds:
-      - .\gradlew.bat lint
+      - powershell -c ".\gradlew.bat lint"
 
   build:
     desc: Build debug APK
     cmds:
-      - .\gradlew.bat assembleDebug
+      - powershell -c ".\gradlew.bat assembleDebug"
 
   clean:
     desc: Clean build artifacts
     cmds:
-      - .\gradlew.bat clean
+      - powershell -c ".\gradlew.bat clean"
 
   full:
     desc: Format, lint, test, and build
