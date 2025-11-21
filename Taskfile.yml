@@ -29,3 +29,36 @@ tasks:
             - task: build
               vars: {MESSAGE: "{{.MESSAGE}}"}
             - git push
+    
+    emu-start:
+        desc: Start Android emulator (WSL2 may not support GUI)
+        cmds:
+            - $ANDROID_HOME/emulator/emulator -avd Pixel_Fold_API_36 -no-snapshot-load -no-audio -no-boot-anim &
+    
+    emu-wait:
+        desc: Wait for emulator to boot
+        cmds:
+            - adb wait-for-device
+            - adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
+            - echo "Emulator booted successfully"
+    
+    emu-install:
+        desc: Install debug APK on connected device/emulator
+        cmds:
+            - adb install -r app/build/outputs/apk/debug/app-debug.apk
+    
+    emu-log:
+        desc: Capture logcat to crash.log
+        cmds:
+            - adb logcat -c
+            - echo "Log cleared. Run the app and press Ctrl+C to stop logging."
+            - adb logcat > crash.log
+    
+    emu-full:
+        desc: Build, start emulator, install, and capture logs
+        cmds:
+            - "{{.GRADLE}} assembleDebug"
+            - task: emu-start
+            - task: emu-wait
+            - task: emu-install
+            - echo "APK installed. Test the app, then run 'task emu-log' to capture crash logs"
