@@ -85,11 +85,41 @@ cd Z:\home\kafka\projects\launcher
 
 ### Task 実行
 
-- `task assembleDebug`
-- `task lint`
-- `task build`
-- `task commit -- MESSAGE="chore: update"` 撮りこぼしなくステージしてコミットする
-- `task all` で lint → build を連続実行する
+#### WSL/Linux での開発
+```bash
+task build          # APK ビルド
+task test           # テスト実行
+task lint           # Lint 実行
+task full           # 完全ビルド（fmt + lint + test + build）
+task commit -- MESSAGE="feat: add feature"  # コミット
+task push -- MESSAGE="fix: bug"             # 完全ビルド + コミット + プッシュ
+```
+
+#### Windows での実行
+
+**初回のみ**: プロジェクトをWindows側にコピー
+```powershell
+# WSL側で実行
+task win-setup
+```
+
+**エミュレータでテスト**: Windows PowerShellで実行
+```powershell
+cd C:\Users\$env:USERNAME\projects\launcher
+task win-emu        # エミュレータ起動 + APK インストール
+task log            # クラッシュログ取得
+```
+
+#### ハイブリッドワークフロー（推奨）
+WSL側で開発・ビルドし、Windows側でエミュレータテスト：
+
+```bash
+# WSL: コード編集 + ビルド
+task build
+
+# Windows PowerShell: エミュレータテスト
+task win-emu
+```
 
 ## 1. 画面と機能
 
