@@ -12,6 +12,12 @@
 - `./gradlew assembleDebug` — デバッグ APK を生成し、実機 / エミュレーター検証に使用。
 - `./gradlew lint` — Lint を走らせ API レベルや未使用リソースを検出。ブロッカーがない状態でレビューへ進めます。
 - `./gradlew clean build` — キャッシュをクリアし Debug/Release 両方を再生成。リリース前や CI での信頼できるスナップショットに使います。
+- `./gradlew testDebugUnitTest` — Robolectric を使った単体テストを実行。
+
+## テスト環境
+- Robolectric 4.15 を使用した Activity 起動テストを `app/src/test/` に配置。
+- デバッグビルドは `isMinifyEnabled = false` と `isDebuggable = true` に設定し、テストとデバッグを容易にしています。
+- WSL2 環境ではエミュレータが動作しないため、実機での検証が必要です。
 
 ## コーディングスタイルと命名規約
 - Kotlin は 4 スペースインデント、`val` 優先、`when`/`sealed interface` で分岐を明示します。長い関数は 60 行以内を目安に分割してください。

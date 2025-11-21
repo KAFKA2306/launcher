@@ -13,6 +13,7 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 | `./gradlew lint` | Lint を実行し API レベル/未使用リソース/潜在バグを検知 |
 | `./gradlew clean build` | Debug/Release 両方を再生成し、CI やリリース前スナップショットを取得 |
 | `./gradlew assembleRelease` | `app/build/outputs/apk/release/app-release.apk` を生成。`apksigner verify` で署名確認後に配布 |
+| `./gradlew testDebugUnitTest` | Robolectric 単体テストを実行（launcher 起動テスト含む） |
 
 署名鍵を共有していないためリポジトリにはデバッグ APK のみを含め、署名前の `app-release-unsigned.apk` は削除した。Release 版は各自の keystore を使ってローカルで生成し、配布前に `apksigner verify` を通す。
 
@@ -138,4 +139,36 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Lint だけを回す
 ./gradlew lint
+```
+
+## 6. テストと検証
+
+### 6.1 単体テスト
+
+- Robolectric 4.15 を使用した Activity 起動テストを `app/src/test/java/com/kafka/launcher/` に配置。
+- `MainActivity` の起動検証は `category.HOME` intent filter を使用。
+- テスト実行: `./gradlew testDebugUnitTest`
+
+### 6.2 デバッグビルド設定
+
+デバッグビルドは以下の設定で開発を容易にしています：
+- `isMinifyEnabled = false` — R8 最適化を無効化し、デバッグとテストを容易に
+- `isDebuggable = true` — デバッグ可能に設定
+- リリースビルドでは minification と shrinking を有効化
+
+### 6.3 トラブルシューティング
+
+#### エミュレータが起動しない（WSL2）
+WSL2 環境では GUI とハードウェア仮想化 (KVM) がサポートされていないため、Android エミュレータは動作しません。実機または Windows 上のエミュレータで検証してください。
+
+#### クラッシュログの取得
+```bash
+# ログクリア
+adb logcat -c
+
+# APK インストール
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# クラッシュログ取得
+adb logcat -d > crash.log
 ```
