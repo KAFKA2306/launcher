@@ -65,9 +65,10 @@ tasks:
     desc: Test on Windows emulator (run from WSL)
     cmds:
       - echo "Setting up Windows environment..."
-      - powershell.exe -c "$$winPath = Join-Path $$env:USERPROFILE 'projects\\launcher'; New-Item -ItemType Directory -Force -Path $$winPath | Out-Null; Copy-Item -Force ./Taskfile.yml $$winPath\\Taskfile.yml"
+      - mkdir -p /mnt/c/Users/front/projects/launcher
+      - cp -f Taskfile.yml /mnt/c/Users/front/projects/launcher/
       - echo "Running automated test on Windows..."
-      - powershell.exe -c "$$winPath = Join-Path $$env:USERPROFILE 'projects\\launcher'; cd $$winPath; task win"
+      - powershell.exe -c "cd C:\\Users\\front\\projects\\launcher; task win"
 
   # Windows: ONE COMMAND (run from Windows PowerShell)
   win:
