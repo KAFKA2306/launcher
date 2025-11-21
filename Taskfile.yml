@@ -1,64 +1,81 @@
 version: '3'
+
 vars:
-    GRADLE: ./gradlew
+  GRADLE: ./gradlew
+  APK: app/build/outputs/apk/debug/app-debug.apk
+
 tasks:
-    test:
-        desc: Run unit tests
-        cmds:
-            - "{{.GRADLE}} testDebugUnitTest"
-    
-    lint:
-        desc: Run lint checks
-        cmds:
-            - "{{.GRADLE}} lint"
-    
-    build:
-        desc: Build, test, and commit changes
-        cmds:
-            - uv run ruff check . --fix
-            - uv run ruff format .
-            - "{{.GRADLE}} lint"
-            - "{{.GRADLE}} testDebugUnitTest"
-            - "{{.GRADLE}} clean build"
-            - git add .
-            - git commit -m "{{.MESSAGE}}"
-    
-    all:
-        desc: Full build with push
-        cmds:
-            - task: build
-              vars: {MESSAGE: "{{.MESSAGE}}"}
-            - git push
-    
-    emu-start:
-        desc: Start Android emulator (WSL2 may not support GUI)
-        cmds:
-            - $ANDROID_HOME/emulator/emulator -avd Pixel_Fold_API_36 -no-snapshot-load -no-audio -no-boot-anim &
-    
-    emu-wait:
-        desc: Wait for emulator to boot
-        cmds:
-            - adb wait-for-device
-            - adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
-            - echo "Emulator booted successfully"
-    
-    emu-install:
-        desc: Install debug APK on connected device/emulator
-        cmds:
-            - adb install -r app/build/outputs/apk/debug/app-debug.apk
-    
-    emu-log:
-        desc: Capture logcat to crash.log
-        cmds:
-            - adb logcat -c
-            - echo "Log cleared. Run the app and press Ctrl+C to stop logging."
-            - adb logcat > crash.log
-    
-    emu-full:
-        desc: Build, start emulator, install, and capture logs
-        cmds:
-            - "{{.GRADLE}} assembleDebug"
-            - task: emu-start
-            - task: emu-wait
-            - task: emu-install
-            - echo "APK installed. Test the app, then run 'task emu-log' to capture crash logs"
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  fmt:
+    desc: Format code
+    cmds:
+      - uv run ruff check . --fix
+      - uv run ruff format .
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - "{{.GRADLE}} testDebugUnitTest"
+
+  lint:
+    desc: Run lint checks
+    cmds:
+      - "{{.GRADLE}} lint"
+
+  build:
+    desc: Build debug APK
+    cmds:
+      - "{{.GRADLE}} assembleDebug"
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - "{{.GRADLE}} clean"
+
+  full:
+    desc: Format, lint, test, and build
+    cmds:
+      - task: fmt
+      - task: lint
+      - task: test
+      - task: build
+
+  commit:
+    desc: Commit with message (use -- MESSAGE="msg")
+    cmds:
+      - git add .
+      - git commit -m "{{.MESSAGE}}"
+
+  push:
+    desc: Full build, commit, and push
+    cmds:
+      - task: full
+      - task: commit
+        vars: {MESSAGE: "{{.MESSAGE}}"}
+      - git push
+
+  emu:
+    desc: Start emulator and install APK
+    cmds:
+      - task: build
+      - $ANDROID_HOME/emulator/emulator -avd Pixel_Fold_API_35 -no-snapshot-load -no-audio &
+      - sleep 30
+      - adb wait-for-device
+      - adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
+      - adb install -r {{.APK}}
+      - echo "Ready. Run 'task log' to capture logs"
+
+  log:
+    desc: Capture logcat to crash.log
+    cmds:
+      - adb logcat -c
+      - adb logcat > crash.log
+
+  install:
+    desc: Install APK on connected device
+    cmds:
+      - adb install -r {{.APK}}
