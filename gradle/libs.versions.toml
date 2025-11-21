@@ -17,6 +17,7 @@ okhttp = "5.0.0"
 securityCrypto = "1.1.0-alpha06"
 errorProne = "2.29.2"
 kotlinxSerialization = "1.7.3"
+robolectric = "4.15"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,6 +47,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 error-prone-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

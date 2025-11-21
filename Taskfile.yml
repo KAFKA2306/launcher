@@ -60,38 +60,13 @@ tasks:
         vars: {MESSAGE: "{{.MESSAGE}}"}
       - git push
 
-  # Windows automated workflow
-  win-setup:
-    desc: Copy project to Windows side (one-time setup)
+  # Windows: ONE COMMAND ONLY
+  win:
+    desc: Complete automated test (Windows - ONE COMMAND)
     cmds:
-      - powershell -c "New-Item -ItemType Directory -Force -Path C:\\Users\\$env:USERNAME\\projects"
-      - powershell -c "Copy-Item -Recurse -Force . C:\\Users\\$env:USERNAME\\projects\\launcher"
-      - echo "Project copied to C:\\Users\\$env:USERNAME\\projects\\launcher"
-
-  win-test:
-    desc: Complete automated test (build + emulator + install + launch + log)
-    cmds:
-      - powershell -c ".\\gradlew.bat assembleDebug"
-      - powershell -c "Write-Host 'Starting emulator...'"
-      - powershell -c "$emu = Join-Path $env:ANDROID_HOME 'emulator\\emulator.exe'; Start-Process -FilePath $emu -ArgumentList '-avd {{.AVD}} -no-snapshot-load -no-audio' -NoNewWindow"
-      - powershell -c "Write-Host 'Waiting for emulator boot (40s)...'"
-      - powershell -c "Start-Sleep -Seconds 40"
-      - powershell -c "Write-Host 'Restarting adb server...'"
-      - powershell -c "adb kill-server; adb start-server"
-      - powershell -c "adb wait-for-device"
-      - powershell -c "Write-Host 'Installing APK...'"
-      - powershell -c "adb install -r {{.APK}}"
-      - powershell -c "Write-Host 'Launching app...'"
-      - powershell -c "adb shell am start -n {{.PKG}}/com.kafka.launcher.MainActivity"
-      - powershell -c "Write-Host 'Capturing logs for 10 seconds...'"
-      - powershell -c "adb logcat -c"
-      - powershell -c "Start-Job -ScriptBlock { adb logcat } | Wait-Job -Timeout 10 | Receive-Job > crash.log"
-      - powershell -c "Write-Host 'Log saved to crash.log'"
-      - powershell -c "if (Select-String -Path crash.log -Pattern 'FATAL|AndroidRuntime') { Write-Host 'CRASH DETECTED! Check crash.log' -ForegroundColor Red } else { Write-Host 'No crash detected' -ForegroundColor Green }"
-
-  win-test-running:
-    desc: Automated test assuming emulator is already running
-    cmds:
+      - powershell -c "Write-Host 'Syncing latest code from WSL...'"
+      - powershell -c "Copy-Item -Force Z:\\home\\kafka\\projects\\launcher\\Taskfile.yml C:\\Users\\$env:USERNAME\\projects\\launcher\\Taskfile.yml"
+      - powershell -c "Copy-Item -Force -Recurse Z:\\home\\kafka\\projects\\launcher\\app C:\\Users\\$env:USERNAME\\projects\\launcher\\app"
       - powershell -c ".\\gradlew.bat assembleDebug"
       - powershell -c "Write-Host 'Restarting adb server...'"
       - powershell -c "adb kill-server; adb start-server; adb wait-for-device"
@@ -104,19 +79,3 @@ tasks:
       - powershell -c "Start-Job -ScriptBlock { adb logcat } | Wait-Job -Timeout 10 | Receive-Job > crash.log"
       - powershell -c "Write-Host 'Log saved to crash.log'"
       - powershell -c "if (Select-String -Path crash.log -Pattern 'FATAL|AndroidRuntime') { Write-Host 'CRASH DETECTED! Check crash.log' -ForegroundColor Red } else { Write-Host 'No crash detected' -ForegroundColor Green }"
-
-  # Quick commands
-  win-build:
-    desc: Build APK only
-    cmds:
-      - powershell -c ".\\gradlew.bat assembleDebug"
-
-  win-install:
-    desc: Install APK only
-    cmds:
-      - powershell -c "adb kill-server; adb start-server; adb wait-for-device; adb install -r {{.APK}}"
-
-  win-launch:
-    desc: Launch app only
-    cmds:
-      - powershell -c "adb shell am start -n {{.PKG}}/com.kafka.launcher.MainActivity"

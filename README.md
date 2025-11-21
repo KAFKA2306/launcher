@@ -85,39 +85,24 @@ cd Z:\home\kafka\projects\launcher
 
 ### Task 実行
 
-#### WSL/Linux での開発
+#### WSL/Linux
 ```bash
-task build          # APK ビルド
-task test           # テスト実行
-task lint           # Lint 実行
-task full           # 完全ビルド（fmt + lint + test + build）
+task build
+task test
+task lint
+task full
 task commit -- MESSAGE="feat: add feature"
 task push -- MESSAGE="fix: bug"
 ```
 
-#### Windows での実行（完全自動化）
+#### Windows（エミュレータが起動している状態で）
 
-**初回のみ**: プロジェクトをWindows側にコピー
-```powershell
-# WSL側で実行
-task win-setup
-```
-
-**完全自動テスト**: Windows PowerShellで実行
 ```powershell
 cd C:\Users\$env:USERNAME\projects\launcher
-
-# たった1コマンドで全自動
-task win-test
-# ↑ これだけで：ビルド → エミュレータ起動 → インストール → アプリ起動 → ログ取得 → クラッシュ判定
+task win
 ```
 
-**個別コマンド**（必要な場合のみ）:
-```powershell
-task win-build      # APKビルドのみ
-task win-install    # APKインストールのみ
-task win-launch     # アプリ起動のみ
-```
+**これだけで完了**：最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定
 
 ## 1. 画面と機能
 

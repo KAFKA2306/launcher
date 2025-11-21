@@ -16,11 +16,8 @@
 - `./gradlew clean build` — 完全リビルド
 - `./gradlew testDebugUnitTest` — Robolectric 単体テスト
 
-### Windows（Task コマンド）
-- `task win-test` — **完全自動テスト**（ビルド → エミュレータ起動 → インストール → アプリ起動 → ログ取得 → クラッシュ判定）
-- `task win-build` — APK ビルドのみ
-- `task win-install` — APK インストールのみ（adb 自動再起動）
-- `task win-launch` — アプリ起動のみ
+### Windows
+- `task win` — **1コマンドで完結**（最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定）
 
 ## テスト環境
 
@@ -31,8 +28,8 @@
 ### Windows エミュレータテスト
 - **環境**: Windows PowerShell + Android SDK (android-clt) + Java 17
 - **AVD**: Pixel_7_API_35 (Android 35, Google APIs, x86_64)
-- **自動化**: `task win-test` で全工程が自動実行（ログは10秒間キャプチャし自動保存）
-- **クラッシュ判定**: ログ内の FATAL/AndroidRuntime を自動検出
+- **実行**: エミュレータ起動後、`cd C:\Users\$env:USERNAME\projects\launcher` → `task win`
+- **自動処理**: WSLから最新コード同期 → ビルド → adb再起動 → インストール → アプリ起動 → ログ10秒間キャプチャ → クラッシュ自動判定
 
 ## コーディングスタイルと命名規約
 - Kotlin は 4 スペースインデント、`val` 優先、`when`/`sealed interface` で分岐を明示します。長い関数は 60 行以内を目安に分割してください。

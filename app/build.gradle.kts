@@ -93,6 +93,9 @@ dependencies {
     implementation(libs.error.prone.annotations)
     implementation(libs.kotlinx.serialization.json)
     ksp(libs.androidx.room.compiler)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
