@@ -1,0 +1,13 @@
+version: '3'
+vars:
+    GRADLE: ./gradlew
+tasks:
+    assembleDebug:
+        cmds:
+            - "{{.GRADLE}} assembleDebug"
+    lint:
+        cmds:
+            - "{{.GRADLE}} lint"
+    build:
+        cmds:
+            - "{{.GRADLE}} clean build"

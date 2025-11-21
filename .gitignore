@@ -8,6 +8,7 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
+.task/
 
 # Binary assets
 *.webp

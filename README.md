@@ -18,6 +18,12 @@ https://github.com/KAFKA2306/launcher/blob/main/app/build/outputs/apk/debug/app-
 
 署名キーストアは `local.properties` で `launcherRelease*` エントリを指定して Gradle へ渡します。
 
+### Task 実行
+
+- `task assembleDebug`
+- `task lint`
+- `task build`
+
 ## 1. 画面と機能
 
 ### 1.1 ホーム画面
