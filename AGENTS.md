@@ -17,10 +17,10 @@
 - `./gradlew testDebugUnitTest` — Robolectric 単体テスト
 
 ### Windows（Task コマンド）
-- `task win-full` — ビルド → エミュレータ起動 → インストール → アプリ起動（一括）
-- `task win-install` — APK インストール（adb サーバー自動再起動）
-- `task win-launch` — アプリ起動
-- `task win-log` — クラッシュログ取得
+- `task win-test` — **完全自動テスト**（ビルド → エミュレータ起動 → インストール → アプリ起動 → ログ取得 → クラッシュ判定）
+- `task win-build` — APK ビルドのみ
+- `task win-install` — APK インストールのみ（adb 自動再起動）
+- `task win-launch` — アプリ起動のみ
 
 ## テスト環境
 
@@ -31,9 +31,8 @@
 ### Windows エミュレータテスト
 - **環境**: Windows PowerShell + Android SDK (android-clt) + Java 17
 - **AVD**: Pixel_7_API_35 (Android 35, Google APIs, x86_64)
-- **重要**: エミュレータ起動後、adb サーバーの再起動が必要（`adb kill-server && adb start-server`）
-- **アプリ起動**: `adb shell am start -n com.kafka.launcher.debug/com.kafka.launcher.MainActivity`
-- **トラブルシューティング**: README.md の「トラブルシューティング」セクション参照
+- **自動化**: `task win-test` で全工程が自動実行（ログは10秒間キャプチャし自動保存）
+- **クラッシュ判定**: ログ内の FATAL/AndroidRuntime を自動検出
 
 ## コーディングスタイルと命名規約
 - Kotlin は 4 スペースインデント、`val` 優先、`when`/`sealed interface` で分岐を明示します。長い関数は 60 行以内を目安に分割してください。

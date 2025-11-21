@@ -95,7 +95,7 @@ task commit -- MESSAGE="feat: add feature"
 task push -- MESSAGE="fix: bug"
 ```
 
-#### Windows での実行（推奨ワークフロー）
+#### Windows での実行（完全自動化）
 
 **初回のみ**: プロジェクトをWindows側にコピー
 ```powershell
@@ -103,37 +103,20 @@ task push -- MESSAGE="fix: bug"
 task win-setup
 ```
 
-**完全ワークフロー**: Windows PowerShellで実行
+**完全自動テスト**: Windows PowerShellで実行
 ```powershell
 cd C:\Users\$env:USERNAME\projects\launcher
 
-# 方法1: 一括実行（推奨）
-task win-full       # ビルド → エミュレータ起動 → インストール → アプリ起動
-
-# 方法2: 段階的実行
-task win-build      # APKビルド
-task win-emu        # エミュレータ起動
-# 40秒待機（エミュレータのブート完了）
-task win-install    # APKインストール（adbサーバー自動再起動）
-task win-launch     # アプリ起動
-task win-log        # クラッシュログ取得（必要な場合）
+# たった1コマンドで全自動
+task win-test
+# ↑ これだけで：ビルド → エミュレータ起動 → インストール → アプリ起動 → ログ取得 → クラッシュ判定
 ```
 
-#### トラブルシューティング
-
-**adbがデバイスを認識しない場合**:
+**個別コマンド**（必要な場合のみ）:
 ```powershell
-adb kill-server
-adb start-server
-adb devices
-```
-
-**AVDが見つからない場合**:
-```powershell
-# AVD作成（Pixel_7_API_35）
-avdmanager create avd -n Pixel_7_API_35 `
-  -k "system-images;android-35;google_apis;x86_64" `
-  --device "pixel_8"
+task win-build      # APKビルドのみ
+task win-install    # APKインストールのみ
+task win-launch     # アプリ起動のみ
 ```
 
 ## 1. 画面と機能
