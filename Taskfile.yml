@@ -2,11 +2,30 @@ version: '3'
 vars:
     GRADLE: ./gradlew
 tasks:
+    test:
+        desc: Run unit tests
+        cmds:
+            - "{{.GRADLE}} testDebugUnitTest"
+    
+    lint:
+        desc: Run lint checks
+        cmds:
+            - "{{.GRADLE}} lint"
+    
     build:
+        desc: Build, test, and commit changes
         cmds:
             - uv run ruff check . --fix
             - uv run ruff format .
             - "{{.GRADLE}} lint"
+            - "{{.GRADLE}} testDebugUnitTest"
             - "{{.GRADLE}} clean build"
             - git add .
             - git commit -m "{{.MESSAGE}}"
+    
+    all:
+        desc: Full build with push
+        cmds:
+            - task: build
+              vars: {MESSAGE: "{{.MESSAGE}}"}
+            - git push
