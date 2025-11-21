@@ -3,6 +3,7 @@ version: '3'
 vars:
   GRADLE: ./gradlew
   APK: app/build/outputs/apk/debug/app-debug.apk
+  AVD: Pixel_7_API_35
 
 tasks:
   default:
@@ -62,7 +63,7 @@ tasks:
     desc: Start emulator and install APK
     cmds:
       - task: build
-      - $ANDROID_HOME/emulator/emulator -avd Pixel_Fold_API_35 -no-snapshot-load -no-audio &
+      - $ANDROID_HOME/emulator/emulator -avd {{.AVD}} -no-snapshot-load -no-audio &
       - sleep 30
       - adb wait-for-device
       - adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done'
