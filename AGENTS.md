@@ -16,8 +16,11 @@
 - `./gradlew clean build` — 完全リビルド
 - `./gradlew testDebugUnitTest` — Robolectric 単体テスト
 
+### WSL
+- `task win-from-wsl` — **WSLから1コマンド**（Windowsエミュレータで完全自動テスト）
+
 ### Windows
-- `task win` — **1コマンドで完結**（最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定）
+- `task win` — Windows PowerShellで実行（最新コード同期 → ビルド → インストール → 起動 → ログ取得）
 
 ## テスト環境
 
@@ -26,10 +29,10 @@
 - デバッグビルドは `isMinifyEnabled = false` と `isDebuggable = true` に設定
 
 ### Windows エミュレータテスト
-- **環境**: Windows PowerShell + Android SDK (android-clt) + Java 17
+- **環境**: Windows PowerShell + Android SDK (android-clt) + Java 17 + エミュレータ起動済み
 - **AVD**: Pixel_7_API_35 (Android 35, Google APIs, x86_64)
-- **実行**: エミュレータ起動後、`cd C:\Users\$env:USERNAME\projects\launcher` → `task win`
-- **自動処理**: WSLから最新コード同期 → ビルド → adb再起動 → インストール → アプリ起動 → ログ10秒間キャプチャ → クラッシュ自動判定
+- **実行**: WSL側で `task win-from-wsl`（初回セットアップ含む完全自動）
+- **自動処理**: 環境構築 → 最新コード同期 → ビルド → adb再起動 → インストール → アプリ起動 → ログ10秒間キャプチャ → クラッシュ自動判定
 
 ## コーディングスタイルと命名規約
 - Kotlin は 4 スペースインデント、`val` 優先、`when`/`sealed interface` で分岐を明示します。長い関数は 60 行以内を目安に分割してください。

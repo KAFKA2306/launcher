@@ -93,16 +93,12 @@ task lint
 task full
 task commit -- MESSAGE="feat: add feature"
 task push -- MESSAGE="fix: bug"
+
+# Windowsエミュレータでテスト（エミュレータ起動後）
+task win-from-wsl
 ```
 
-#### Windows（エミュレータが起動している状態で）
-
-```powershell
-cd C:\Users\$env:USERNAME\projects\launcher
-task win
-```
-
-**これだけで完了**：最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定
+**`task win-from-wsl`** で完全自動：初回セットアップ → 最新コード同期 → ビルド → インストール → 起動 → ログ取得 → クラッシュ判定
 
 ## 1. 画面と機能
 
