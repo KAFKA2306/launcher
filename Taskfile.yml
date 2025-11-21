@@ -1,13 +1,6 @@
 version: '3'
 
 vars:
-  GRADLE:
-    sh: |
-      if [ -f "./gradlew" ]; then
-        echo "./gradlew"
-      else
-        echo "gradlew.bat"
-      fi
   APK: app/build/outputs/apk/debug/app-debug.apk
   AVD: Pixel_7_API_35
 
@@ -26,22 +19,22 @@ tasks:
   test:
     desc: Run unit tests
     cmds:
-      - "{{.GRADLE}} testDebugUnitTest"
+      - gradlew.bat testDebugUnitTest
 
   lint:
     desc: Run lint checks
     cmds:
-      - "{{.GRADLE}} lint"
+      - gradlew.bat lint
 
   build:
     desc: Build debug APK
     cmds:
-      - "{{.GRADLE}} assembleDebug"
+      - gradlew.bat assembleDebug
 
   clean:
     desc: Clean build artifacts
     cmds:
-      - "{{.GRADLE}} clean"
+      - gradlew.bat clean
 
   full:
     desc: Format, lint, test, and build
