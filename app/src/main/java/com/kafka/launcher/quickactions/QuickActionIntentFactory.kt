@@ -2,7 +2,10 @@ package com.kafka.launcher.quickactions
 
 import android.content.Context
 import android.content.Intent
+import android.provider.AlarmClock
 import android.provider.CalendarContract
+import android.provider.MediaStore
+import android.provider.Settings
 import androidx.core.net.toUri
 import com.kafka.launcher.discord.DiscordActivity
 import com.kafka.launcher.domain.model.ActionType
@@ -24,6 +27,11 @@ class QuickActionIntentFactory(private val context: Context) {
             ActionType.EMAIL_COMPOSE -> composeEmail(action.packageName)
             ActionType.BROWSER_URL -> openUrl(action.data ?: "", action.packageName)
             ActionType.DISCORD_WEBVIEW -> openDiscordWebView(action.data)
+            ActionType.PHONE_DIAL -> dialPhone(query)
+            ActionType.SMS_COMPOSE -> composeSms(query)
+            ActionType.CAMERA_STILL -> openSystemAction(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)
+            ActionType.ALARM_LIST -> openSystemAction(AlarmClock.ACTION_SHOW_ALARMS)
+            ActionType.SYSTEM_SETTINGS -> openSystemAction(Settings.ACTION_SETTINGS)
         }
     }
 
@@ -57,6 +65,21 @@ class QuickActionIntentFactory(private val context: Context) {
     private fun composeEmail(packageName: String?): Intent? {
         val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return preferPackage(intent, packageName)
+    }
+
+    private fun dialPhone(query: String): Intent? {
+        val intent = Intent(Intent.ACTION_DIAL, "tel:${query.trim()}".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return preferPackage(intent, null)
+    }
+
+    private fun composeSms(query: String): Intent? {
+        val intent = Intent(Intent.ACTION_SENDTO, "smsto:${query.trim()}".toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return preferPackage(intent, null)
+    }
+
+    private fun openSystemAction(action: String): Intent? {
+        val intent = Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return preferPackage(intent, null)
     }
 
     private fun openDiscordWebView(initialUrl: String?): Intent {
