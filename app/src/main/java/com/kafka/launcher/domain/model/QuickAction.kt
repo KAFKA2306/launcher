@@ -21,7 +21,12 @@ enum class ActionType {
     EMAIL_COMPOSE,
     DISCORD_OPEN,
     DISCORD_WEBVIEW,
-    BROWSER_URL
+    BROWSER_URL,
+    PHONE_DIAL,
+    SMS_COMPOSE,
+    CAMERA_STILL,
+    ALARM_LIST,
+    SYSTEM_SETTINGS
 }
 
 data class UserQuickActionConfig(

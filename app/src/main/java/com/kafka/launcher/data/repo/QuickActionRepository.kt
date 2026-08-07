@@ -10,17 +10,18 @@ import com.kafka.launcher.data.quickaction.QuickActionCatalog
 import com.kafka.launcher.data.quickaction.QuickActionCatalogStore
 import com.kafka.launcher.data.quickaction.toQuickAction
 import com.kafka.launcher.domain.model.QuickAction
+import com.kafka.launcher.quickactions.AndroidSystemModule
 import com.kafka.launcher.quickactions.QuickActionIntentFactory
 import com.kafka.launcher.quickactions.QuickActionProvider
 import java.util.Locale
 import kotlin.jvm.Volatile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.SupervisorJob
 
 class QuickActionRepository(
     private val context: Context,
@@ -73,7 +74,8 @@ class QuickActionRepository(
     }
 
     private fun buildQuickActions(): List<QuickAction> {
-        val staticActions = providers
+        val builtInProviders = (providers + AndroidSystemModule()).distinctBy { it.id }
+        val staticActions = builtInProviders
             .flatMap { it.actions(context) }
             .filter { isAvailable(it) }
         val aiActions = catalogSnapshot.entries
