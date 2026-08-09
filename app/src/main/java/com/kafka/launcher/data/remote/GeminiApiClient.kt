@@ -42,7 +42,7 @@ class GeminiApiClient(private val client: OkHttpClient = OkHttpClient()) {
             append(GeminiConfig.generationConfig)
             append(",")
             append("\"contents\":[")
-            append("{\"role\":\"user\",\"parts\":[{\"text\":\"KafkaLauncher action log payload\"}]},")
+            append("{\"role\":\"user\",\"parts\":[{\"text\":\"KafkaLauncher usage payload. Use recommendationFeedback usageCount, acceptedCount, and dismissedCount as explicit human feedback when ranking or proposing actions.\"}]},")
             append("{\"role\":\"user\",\"parts\":[{\"text\":")
             append(escapedPayload)
             append("}]}]")
