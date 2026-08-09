@@ -38,5 +38,12 @@ jobs:
           cache: gradle
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
-      - name: Run QuickAction regression tests
-        run: ./gradlew testDebugUnitTest --tests com.kafka.launcher.quickactions.AndroidSystemModuleTest --stacktrace
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+      - name: Audit Gemini feedback log privacy contract
+        run: |
+          grep -q 'gemini_sync_events.jsonl' app/src/main/java/com/kafka/launcher/config/LauncherConfig.kt
+          grep -q 'recommendationFeedback' app/src/main/java/com/kafka/launcher/domain/usecase/GeminiPayloadBuilder.kt
+          ! grep -E 'apiKey|rawPayload|rawResponse' app/src/main/java/com/kafka/launcher/data/log/GeminiSyncLogWriter.kt
+      - name: Confirm checkout clean
+        run: git status --porcelain | tee /tmp/status && test ! -s /tmp/status
