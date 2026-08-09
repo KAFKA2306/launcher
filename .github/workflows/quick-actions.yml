@@ -38,8 +38,12 @@ jobs:
           cache: gradle
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+      - name: Run Gemini feedback payload tests
+        run: ./gradlew testDebugUnitTest --tests com.kafka.launcher.domain.usecase.GeminiPayloadBuilderTest --stacktrace
+      - name: Run QuickAction regression tests
+        run: ./gradlew testDebugUnitTest --tests com.kafka.launcher.quickactions.AndroidSystemModuleTest --stacktrace
+      - name: Run MainActivity smoke test
+        run: ./gradlew testDebugUnitTest --tests com.kafka.launcher.MainActivityTest --stacktrace
       - name: Audit Gemini feedback log privacy contract
         run: |
           grep -q 'gemini_sync_events.jsonl' app/src/main/java/com/kafka/launcher/config/LauncherConfig.kt
