@@ -9,7 +9,11 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 class GeminiPayloadBuilder {
-    fun build(events: List<ActionLog>, stats: List<ActionStats>): String {
+    fun build(
+        events: List<ActionLog>,
+        stats: List<ActionStats>,
+        feedback: List<GeminiFeedbackSignal> = emptyList()
+    ): String {
         val ordered = events.sortedBy { it.timestamp }.map { TimedLog(it) }
         val windows = GeminiConfig.timeWindows
         val actionFallback = stats
@@ -20,7 +24,7 @@ class GeminiPayloadBuilder {
             .filter { it.actionId.startsWith(LauncherConfig.appUsagePrefix) }
             .map { it.actionId.removePrefix(LauncherConfig.appUsagePrefix) to it.count.toInt() }
             .take(GeminiConfig.payloadAppLimit)
-        val payload = buildString {
+        return buildString {
             append("{")
             append("\"timeWindowStats\":[")
             windows.forEachIndexed { index, definition ->
@@ -29,10 +33,25 @@ class GeminiPayloadBuilder {
                 if (index < windows.lastIndex) append(",")
             }
             append("],")
+            append("\"recommendationFeedback\":[")
+            feedback
+                .sortedBy { it.id }
+                .forEachIndexed { index, signal ->
+                    append("{\"id\":")
+                    append(jsonString(signal.id))
+                    append(",\"usageCount\":")
+                    append(signal.usageCount)
+                    append(",\"acceptedCount\":")
+                    append(signal.acceptedCount)
+                    append(",\"dismissedCount\":")
+                    append(signal.dismissedCount)
+                    append("}")
+                    if (index < feedback.lastIndex) append(",")
+                }
+            append("],")
             append("\"recentAnomalies\":[]")
             append("}")
         }
-        return payload
     }
 
     private fun windowJson(
@@ -46,14 +65,14 @@ class GeminiPayloadBuilder {
         val sequence = recentSequence(logs)
         return buildString {
             append("{")
-            append("\"windowId\":\"")
-            append(id)
-            append("\",")
+            append("\"windowId\":")
+            append(jsonString(id))
+            append(",")
             append("\"topActions\":[")
             actions.forEachIndexed { index, entry ->
-                append("{\"id\":\"")
-                append(entry.first)
-                append("\",\"count\":")
+                append("{\"id\":")
+                append(jsonString(entry.first))
+                append(",\"count\":")
                 append(entry.second)
                 append(",\"successRate\":1.0}")
                 if (index < actions.lastIndex) append(",")
@@ -61,9 +80,9 @@ class GeminiPayloadBuilder {
             append("],")
             append("\"topApps\":[")
             apps.forEachIndexed { index, entry ->
-                append("{\"packageName\":\"")
-                append(entry.first)
-                append("\",\"count\":")
+                append("{\"packageName\":")
+                append(jsonString(entry.first))
+                append(",\"count\":")
                 append(entry.second)
                 append("}")
                 if (index < apps.lastIndex) append(",")
@@ -71,9 +90,7 @@ class GeminiPayloadBuilder {
             append("],")
             append("\"recentActionSequence\":[")
             sequence.forEachIndexed { index, action ->
-                append("\"")
-                append(action)
-                append("\"")
+                append(jsonString(action))
                 if (index < sequence.lastIndex) append(",")
             }
             append("]")
@@ -126,6 +143,28 @@ class GeminiPayloadBuilder {
         }
     }
 
+    private fun jsonString(value: String): String = buildString {
+        append('"')
+        value.forEach { character ->
+            when (character) {
+                '"' -> append("\\\"")
+                '\\' -> append("\\\\")
+                '\b' -> append("\\b")
+                '\u000C' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> if (character.code < 0x20) {
+                    append("\\u")
+                    append(character.code.toString(16).padStart(4, '0'))
+                } else {
+                    append(character)
+                }
+            }
+        }
+        append('"')
+    }
+
     private class TimedLog(action: ActionLog) {
         private val timestamp: ZonedDateTime = Instant.ofEpochMilli(action.timestamp).atZone(ZoneOffset.UTC)
         val minuteOfDay: Int = timestamp.hour * 60 + timestamp.minute
@@ -133,3 +172,10 @@ class GeminiPayloadBuilder {
         val actionId: String = action.actionId
     }
 }
+
+data class GeminiFeedbackSignal(
+    val id: String,
+    val usageCount: Long,
+    val acceptedCount: Long,
+    val dismissedCount: Long
+)
