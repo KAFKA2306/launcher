@@ -20,6 +20,7 @@ object LauncherConfig {
     const val actionLogEventsFileName = "action_events.jsonl"
     const val actionLogRecentFileName = "action_recent.json"
     const val actionLogStatsFileName = "action_stats.json"
+    const val geminiSyncEventsFileName = "gemini_sync_events.jsonl"
     const val statsLimit = 50
     const val favoritesLimit = 15
     const val recentLimit = 24
