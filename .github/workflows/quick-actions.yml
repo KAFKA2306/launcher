@@ -47,5 +47,7 @@ jobs:
           grep -q 'gemini_sync_events.jsonl' app/src/main/java/com/kafka/launcher/config/LauncherConfig.kt
           grep -q 'recommendationFeedback' app/src/main/java/com/kafka/launcher/domain/usecase/GeminiPayloadBuilder.kt
           ! grep -E 'apiKey|rawPayload|rawResponse' app/src/main/java/com/kafka/launcher/data/log/GeminiSyncLogWriter.kt
+      - name: Remove generated checkout changes
+        run: git restore --worktree app/build/outputs/apk/debug/app-debug.apk
       - name: Confirm checkout clean
         run: git status --porcelain | tee /tmp/status && test ! -s /tmp/status
