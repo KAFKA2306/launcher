@@ -3,7 +3,7 @@ package com.kafka.launcher.config
 import androidx.work.NetworkType
 
 object GeminiConfig {
-    const val model = "gemini-2.5-pro-exp"
+    const val model = "gemini-2.5-pro"
     const val endpoint = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
     const val periodHours = 3L
     const val recommendationDirectory = "config"
