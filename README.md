@@ -162,7 +162,7 @@ task win-from-wsl
 #### Gemini 再スコアリングサイクル（実装済み）
 
 1. `GeminiWorkScheduler` がアプリ起動時と `BOOT_COMPLETED` 受信時に `GeminiSyncWorker` を `WorkManager` (`NetworkType.UNMETERED`, 3 時間間隔) へ登録する。
-2. Worker は `ActionLogRepository.exportEvents()` / `statsSnapshot()` のスナップショットを `GeminiPayloadBuilder` で JSON 化し、`GeminiConfig` の `generationConfig` とレスポンススキーマを添えて `GeminiApiClient` から `gemini-2.5-pro-exp` へ POST する。
+2. Worker は `ActionLogRepository.exportEvents()` / `statsSnapshot()` のスナップショットを `GeminiPayloadBuilder` で JSON 化し、`GeminiConfig` の `generationConfig` とレスポンススキーマを添えて `GeminiApiClient` から `gemini-2.5-pro` へ POST する。
 3. 応答は `GeminiRecommendationStore` の `/files/config/gemini_recommendations.json` に保存され、`LauncherViewModel` が Flow を購読して `LauncherState.recommendedActions` / `favoriteApps` / `aiPreview` / `currentTimeWindowId` へ反映する。
 4. `globalPins` はお気に入り行の優先枠、`suppressions` は QuickAction 非表示、`windows.primaryActionIds` は現在時間帯のおすすめ行と `AiRecommendationPreview` 双方へ渡される。詳細スキーマと動作は `docs/design/gemini_feedback_loop.md` を参照。
 
