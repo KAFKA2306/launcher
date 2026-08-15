@@ -50,4 +50,4 @@
 ## セキュリティと設定 Tips
 - API キーや署名ファイルは `local.properties` や `~/.gradle/gradle.properties` に置く。
 - `WindowCompat.setDecorFitsSystemWindows(window, false)` など端末依存の設定は API レベル条件をコード内に残し、Lint 警告が出ないことを確認してからマージします。
-- ネットワークやログ連携を追加する場合は `quickactions` もしくは `remote/ApiClient` に閉じ込める。
+- ネットワークやログ連携を追加する場合は既存の責務境界に閉じ込める。
