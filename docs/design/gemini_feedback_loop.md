@@ -1,6 +1,6 @@
 # Gemini フィードバックループ仕様
 
-KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ送り、Structured Output の推薦を `QuickActionRow` `FavoriteAppsRow` `AiRecommendationPreview` に反映する。`GeminiSyncWorker` `GeminiPayloadBuilder` `GeminiRecommendationStore` `AiRecommendationPreview` を含む最小構成を実装済みであり、端末内で完結したループを保持する。
+KafkaLauncher は端末内ログを 3 時間ごとに Gemini 2.5 Pro へ送り、Structured Output の推薦を `QuickActionRow` `FavoriteAppsRow` `AiRecommendationPreview` に反映する。`GeminiSyncWorker` `GeminiPayloadBuilder` `GeminiRecommendationStore` `AiRecommendationPreview` を含む最小構成を実装済みであり、端末内で完結したループを保持する。
 
 ## 目的と実装状況
 
@@ -56,10 +56,10 @@ KafkaLauncher は端末内ログを 3 時間ごとに Gemini Pro 2.5 preview へ
 }
 ```
 
-## Gemini API preview 呼び出し
+## Gemini API 呼び出し
 
-- モデル: `gemini-2.5-pro-exp`
-- エンドポイント: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-exp:generateContent`
+- モデル: `gemini-2.5-pro`
+- エンドポイント: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`
 - `generationConfig`: `GeminiConfig.generationConfig`（temperature/topP/responseMimeType/ActionRecommendationSet schema）
 - リクエスト構造: `contents[0]` に指示文、`contents[1].parts[0].text` に `payload.json` を JSON 文字列として埋め込む。
 - API キー: 設定画面で入力した値を `GeminiApiKeyStore` が `GeminiConfig.apiKeyStoreFileName`（EncryptedSharedPreferences + MasterKey）に保存し、`GeminiSyncWorker` は `GeminiApiKeyStore.current()` から取得して空の場合は即終了する。
