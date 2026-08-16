@@ -60,6 +60,16 @@ tasks:
         vars: {MESSAGE: "{{.MESSAGE}}"}
       - git push
 
+  nav-audit:
+    desc: Capture launcher/navigation state from an ADB-connected device
+    cmds:
+      - adb wait-for-device
+      - adb shell "getprop | grep -Ei 'ro.product.(manufacturer|brand|model)|ro.build.(fingerprint|version.release|version.sdk)|ro.miui|ro.mi.os'"
+      - adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME
+      - adb shell settings get secure navigation_mode
+      - adb shell settings get global force_fsg_nav_bar
+      - adb shell "cmd overlay list | grep -Ei 'navbar|gesture|launcher|systemui'"
+
   # Windows: Complete automation from WSL
   win-from-wsl:
     desc: Test on Windows emulator (run from WSL)
