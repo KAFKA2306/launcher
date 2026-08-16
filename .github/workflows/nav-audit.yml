@@ -1,0 +1,10 @@
+name: nav-audit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  unavailable-on-github-hosted-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Use task nav-audit on a USB/ADB-connected Xiaomi device.'
