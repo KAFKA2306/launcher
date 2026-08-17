@@ -10,7 +10,7 @@ on:
       - "gradle.properties"
       - "settings.gradle.kts"
       - ".gitignore"
-      - ".github/workflows/quick-actions.yml"
+      - ".github/workflows/**"
   push:
     branches:
       - main
@@ -22,7 +22,7 @@ on:
       - "gradle.properties"
       - "settings.gradle.kts"
       - ".gitignore"
-      - ".github/workflows/quick-actions.yml"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
